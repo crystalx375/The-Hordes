@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "hordes",
+  "version": "1.0-1.20.x",
+  "name": "The Hordes",
+  "description": "",
+  "authors": [
+    "Crystal"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/project/the-hordes-fabric",
+    "sources": "https://github.com/crystalx375/The-Hordes"
+  },
+  "license": "LGPLv2.1",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "crystal.hordes.TheHordes"
+    ]
+  },
+  "mixins": [
+    "hordes.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "minecraft": ">=1.20 <=1.20.4",
+    "fabric-api": "*"
+  }
+}

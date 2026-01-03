@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "package": "crystal.hordes.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "HoglinMixin",
+    "LivingEntityMixin",
+    "MobEntityMixin"
+  ],
+  "client": [],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
