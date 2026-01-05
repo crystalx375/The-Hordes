@@ -11,8 +11,7 @@ import net.minecraft.entity.mob.MobEntity;
 public class HordesConfig {
     private static HordesConfig INSTANCE;
     /**
-     * Вывод всех переменных для простого изменения
-     * Просто для удобства, если кто-то захочет что-то поменять
+     * Конфиг файл, использовал SimpleConfig и парс по ключам
      */
     public int daysBetweenHordes;
     public int hordeDuration;
@@ -55,7 +54,7 @@ public class HordesConfig {
     // Использую SimpleConfig
     // https://github.com/magistermaks/fabric-simplelibs/blob/master/simple-config/SimpleConfig.java
     private HordesConfig() {
-        SimpleConfig CONFIG = SimpleConfig.of("hordes_config").provider(this::defaultConfig).request();
+        SimpleConfig CONFIG = SimpleConfig.of("hordes_common").provider(this::defaultConfig).request();
         this.daysBetweenHordes = CONFIG.getOrDefault("days_between_hordes", 7);
 
         this.hordeDuration = CONFIG.getOrDefault("hordes_duration", 6000);
@@ -76,7 +75,7 @@ public class HordesConfig {
         delayTicks = CONFIG.getOrDefault("delay_before_despawn", 12000);
 
         // (section) I don't recommend changing anything below unless you understand why
-        this.overworld = parseMobMap(CONFIG.getOrDefault("mobs.overworld", "minecraft:zombie:100, minecraft:skeleton:20"));
+        this.overworld = parseMobMap(CONFIG.getOrDefault("mobs.overworld", "minecraft:zombie:5, minecraft:skeleton:1"));
         this.nether = parseMobMap(CONFIG.getOrDefault("mobs.nether", "minecraft:zombified_piglin:30, minecraft:hoglin:5, minecraft:ghast:1"));
         this.end = parseMobMap(CONFIG.getOrDefault("mobs.end", "minecraft:phantom:10"));
         DESPAWN_INTERVAL_TICKS = CONFIG.getOrDefault("despawn_interval", 50);
@@ -141,7 +140,7 @@ public class HordesConfig {
                 #                weight                weight
                 # The spawn chance is calculated as the mob weight / total weight
                 # So chance of spawn zombie = 5 / 6 = 0.83... and chance of spawn skeleton = 1 / 6 = 0.17...
-                # <--- I didn't change the AI for those, which not selected here, so there might be problems with ai goals --->
+                # <--- I didn't change the AI for those (brain), which not selected here, so there might be problems with ai goals --->
                 # Mobs selection in overworld (default: minecraft:zombie:5, minecraft:skeleton:1)
                 mobs.overworld = minecraft:zombie:5, minecraft:skeleton:1
                 # Mobs selection in nether (default: minecraft:zombified_piglin:30, minecraft:hoglin:5, minecraft:ghast:1)
@@ -162,7 +161,7 @@ public class HordesConfig {
                 
                 # Show debug (bool)
                 # Why you use it?
-                # Submit issue https://github.com/crystalx375
+                # Submit issue https://github.com/crystalx375/The-Hordes
                 debug = false
                 """;
     }

@@ -30,7 +30,7 @@ public class TickHandler {
                 if (nightCheck) startHorde(world);
             }
         } else {
-            if (ticks > cfg.hordeDuration - cfg.waveInterval + UPDATE_TIME) {
+            if (ticks > cfg.hordeDuration - cfg.waveInterval + UPDATE_TIME * 2) {
                 endHorde(world);
                 return;
             }

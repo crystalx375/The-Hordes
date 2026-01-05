@@ -13,7 +13,7 @@ import static crystal.hordes.event.Despawner.internalDespawnTimer;
 public class Nbt {
     private static final File DATA_FILE = FabricLoader.getInstance().getConfigDir().resolve("hordes_data.dat").toFile();
     /**
-     * Создаем файл
+     * По названию понятно, просто записываем и читаем файл с инфой (.nbt)
      */
     public static void saveState() {
         try {
@@ -31,9 +31,6 @@ public class Nbt {
             TheHordes.LOGGER.error("Failed to save state: " + e.getMessage());
         }
     }
-    /**
-     * Вытаскиваем файл
-     */
     public static void loadState() {
         if (!DATA_FILE.exists()) return;
         try {
