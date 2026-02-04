@@ -35,9 +35,7 @@ public class Despawner {
 
         if (delayTimer > 0) {
             delayTimer -= UPDATE_TIME;
-            if (delayTimer % 1000 == 0) {
-                TheHordes.LOGGER.info("delayTimer: " + delayTimer);
-            }
+            if (delayTimer % 1000 == 0 && DEBUG) TheHordes.LOGGER.info("[Despawner] delayTimer: " + delayTimer);
             return;
         }
 
@@ -66,8 +64,7 @@ public class Despawner {
                 continue;
             }
 
-            boolean playerNearby = z.getWorld().getPlayers().stream()
-                    .anyMatch(player -> player.squaredDistanceTo(z) < 80 * 80);
+            boolean playerNearby = z.getWorld().getPlayers().stream().anyMatch(player -> player.squaredDistanceTo(z) < 80 * 80);
 
             if (!playerNearby) {
                 z.discard();
@@ -76,8 +73,8 @@ public class Despawner {
                 continue;
             }
 
-            if (z.getWorld() instanceof ServerWorld sw) {
-                sw.spawnParticles(ParticleTypes.SMOKE, z.getX(), z.getY() + 1, z.getZ(), 10, 0.2, 0.5, 0.2, 0.05);
+            if (z.getWorld() instanceof ServerWorld server) {
+                server.spawnParticles(ParticleTypes.SMOKE, z.getX(), z.getY() + 1, z.getZ(), 10, 0.2, 0.5, 0.2, 0.05);
                 z.discard();
                 iter.remove();
                 count++;

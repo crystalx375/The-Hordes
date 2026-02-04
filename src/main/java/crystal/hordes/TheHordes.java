@@ -12,7 +12,7 @@ public class TheHordes implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger("Hordes");
 	@Override
 	public void onInitialize() {
-        LOGGER.info("Initializing mod");
+        LOGGER.info("Initializing...");
         HordesCommand.register();
         ServerTickEvents.END_SERVER_TICK.register(TickHandler::onServerTick);
     }

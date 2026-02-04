@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import crystal.hordes.TheHordes;
 import crystal.hordes.util.SimpleConfig;
 import net.minecraft.entity.mob.MobEntity;
 
@@ -91,7 +92,7 @@ public class HordesConfig {
     }
     private String defaultConfig(String filename) {
         return """
-                # Hordes Mod Configuration 0.1 (1.0)
+                hordes = 0.1
                 # <------ The config is not updating, so delete it when you updating the mod version ------>
                 # (20 ticks = 1 second)
                 # (1 day = 24000 ticks)
@@ -182,7 +183,7 @@ public class HordesConfig {
                 }
             }
         } catch (Exception e) {
-            System.err.println("[Hordes] Failed to parse mob map: " + raw);
+            TheHordes.LOGGER.error("Failed to parse mob map: " + raw);
         }
         return map.isEmpty() ? Map.of("minecraft:zombie", 100) : map;
     }

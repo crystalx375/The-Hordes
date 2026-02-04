@@ -24,16 +24,15 @@ public class TickHandler {
         HordesConfig cfg = HordesConfig.get();
         if (world.getPlayers().isEmpty()) return;
 
-        if (!active) {
-            if (ticks >= cfg.daysBetweenHordes * 24000) {
-                boolean nightCheck = (world.isNight() || !HordesConfig.required_night);
-                if (nightCheck) startHorde(world);
-            }
+        if (!active && ticks >= cfg.daysBetweenHordes * 24000) {
+            boolean nightCheck = (world.isNight() || !HordesConfig.required_night);
+            if (nightCheck) startHorde(world);
         } else {
             if (ticks > cfg.hordeDuration - cfg.waveInterval + UPDATE_TIME * 2) {
                 endHorde(world);
                 return;
             }
+
             if (wave) {
                 boolean canSpawn = false;
                 if (world.getRegistryKey() == World.OVERWORLD && cfg.spawnInOverworld) canSpawn = true;
@@ -43,8 +42,9 @@ public class TickHandler {
                 if (canSpawn) {
                     SpawnWave.spawnWave(world, mobPool);
                     if (DEBUG) TheHordes.LOGGER.info("[TickHandler] Spawning wave in dimension: " + world.getRegistryKey().getValue());
+                } else {
+                    TheHordes.LOGGER.warn("Cant spawn, because config spawn in that dimension = " + canSpawn + " (" + world.getRegistryKey().getValue().toString() + ")");
                 }
-                if (!canSpawn) TheHordes.LOGGER.info("Cant spawn, because config spawn in that dimension = " + canSpawn + " (" + world.getRegistryKey().getValue().toString() + ")");
             }
         }
     }

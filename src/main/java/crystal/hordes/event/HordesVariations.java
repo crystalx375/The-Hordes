@@ -49,9 +49,11 @@ public class HordesVariations {
         mob.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + yOffset, pos.getZ() + 0.5, rnd.nextFloat() * 360f, 0f);
         ((HordesAccessor) mob).the_Hordes$setHordeZombie(true, clusterId, playerUuid);
         mob.initialize(world, world.getLocalDifficulty(pos), SpawnReason.EVENT, null, null);
+
         if (mob instanceof PiglinEntity piglin) {
             piglin.setImmuneToZombification(true);
         }
+
         if (!(mob instanceof GhastEntity)) {
             mob.setPathfindingPenalty(PathNodeType.WATER, -1.0F);
             mob.setPathfindingPenalty(PathNodeType.WATER_BORDER, -1.0F);

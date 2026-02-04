@@ -3,9 +3,12 @@
   "package": "crystal.hordes.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "BowAccessor",
+    "BowAttackGoalMixin",
     "HoglinMixin",
     "LivingEntityMixin",
-    "MobEntityMixin"
+    "MobEntityMixin",
+    "SkeletonMixin"
   ],
   "client": [],
   "server": [],
