@@ -1,6 +1,8 @@
 package crystal.hordes.event;
 
 import crystal.hordes.HordesAccessor;
+import crystal.hordes.config.HordesConfig;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.SpawnReason;
@@ -8,8 +10,10 @@ import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.GhastEntity;
 import net.minecraft.entity.mob.PiglinEntity;
+import net.minecraft.entity.mob.ZombieHorseEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
@@ -21,6 +25,30 @@ public class HordesVariations {
      * Подготовка мобов
      * используется в SpawnWave
      */
+    public static MobEntity spawnHordes(ServerWorld world, ServerPlayerEntity player, EntityType<?> type, BlockPos finalPos) {
+        Entity entity = type.create(world);
+        UUID playerUuid = player.getUuid();
+        UUID clusterId = UUID.randomUUID();
+        Random rnd = world.random;
+        if (entity instanceof MobEntity mob) {
+            prepareMob(mob, clusterId, playerUuid, finalPos, world, rnd);
+            if ((type == EntityType.SKELETON && rnd.nextFloat() < 0.2f) || (type == EntityType.ZOMBIE && rnd.nextFloat() < 0.01f)) {
+                ZombieHorseEntity horse = EntityType.ZOMBIE_HORSE.create(world);
+                if (horse != null) {
+                    horse.setTame(true);
+                    prepareMob(horse, clusterId, playerUuid, finalPos, world, rnd);
+                    world.spawnEntity(horse);
+                    mob.startRiding(horse);
+                }
+            }
+            world.spawnEntity(mob);
+            HordesConfig.getHordeZombies().add(mob);
+
+            return mob;
+        }
+        return null;
+    }
+
     private static void giveHordeEquipment(MobEntity mob, Random rnd) {
         // Даем вещи мобам (криво)
         // Я порофлил когда с лошади броня выпала
@@ -43,8 +71,8 @@ public class HordesVariations {
         }
     }
 
-    // Промежуточный класс для создания
-    protected static void prepareMob(MobEntity mob, UUID clusterId, UUID playerUuid, BlockPos pos, ServerWorld world, Random rnd) {
+
+    private static void prepareMob(MobEntity mob, UUID clusterId, UUID playerUuid, BlockPos pos, ServerWorld world, Random rnd) {
         double yOffset = (mob instanceof GhastEntity) ? 2.0 : 0.1;
         mob.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + yOffset, pos.getZ() + 0.5, rnd.nextFloat() * 360f, 0f);
         ((HordesAccessor) mob).the_Hordes$setHordeZombie(true, clusterId, playerUuid);

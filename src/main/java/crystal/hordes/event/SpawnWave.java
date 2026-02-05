@@ -2,10 +2,8 @@ package crystal.hordes.event;
 
 import crystal.hordes.TheHordes;
 import crystal.hordes.config.HordesConfig;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.ZombieHorseEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -14,11 +12,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
 
 import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
 
-import static crystal.hordes.config.HordesConfig.*;
-import static crystal.hordes.event.HordesVariations.prepareMob;
+import static crystal.hordes.config.HordesConfig.DEBUG;
+import static crystal.hordes.config.HordesConfig.get;
+import static crystal.hordes.event.HordesVariations.spawnHordes;
 import static crystal.hordes.event.SpawnPos.spawnCluster;
 
 public class SpawnWave {
@@ -50,48 +47,32 @@ public class SpawnWave {
         // + чуть проверок
         for (ServerPlayerEntity player : world.getPlayers()) {
             if (player.getWorld() != world) continue;
+            EntityType<?> type;
 
             int toSpawn = cfg.zombiesPerWave;
             int attempts = 0;
-            UUID playerUuid = player.getUuid();
-            UUID clusterId = UUID.randomUUID();
-            EntityType<?> type;
-            BlockPos basePos = SpawnPos.findSpawnAroundPlayer(world, player, null, rnd);
 
+            BlockPos basePos = SpawnPos.findSpawnAroundPlayer(world, player, null, rnd);
             if (basePos == null) continue;
 
             while (toSpawn > 0 && attempts < toSpawn * 10) {
                 // Здесь мы находим finalPos для каждого моба
-                BlockPos finalPos = new BlockPos(Objects.requireNonNull(spawnCluster(world, basePos, player)));
-
                 type = getRandomMobByWeight(mobPool, rnd);
                 attempts++;
+
+                BlockPos finalPos = spawnCluster(world, basePos, player);
+                if (finalPos == null) continue;
 
                 if (!SpawnPos.isValidSpawn(world, type, finalPos)) continue;
 
                 // Даем случайные атрибуты мобу
-                Entity entity = type.create(world);
-                if (entity instanceof MobEntity mob) {
-                    prepareMob(mob, clusterId, playerUuid, finalPos, world, rnd);
-                    if ((type == EntityType.SKELETON && rnd.nextFloat() < 0.2f) || (type == EntityType.ZOMBIE && rnd.nextFloat() < 0.01f)) {
-                        ZombieHorseEntity horse = EntityType.ZOMBIE_HORSE.create(world);
-                        if (horse != null) {
-                            horse.setTame(true);
-                            prepareMob(horse, clusterId, playerUuid, finalPos, world, rnd);
-                            world.spawnEntity(horse);
-                            mob.startRiding(horse);
-                        }
-                    }
+                MobEntity mob = spawnHordes(world, player, type, finalPos);
+                if (rnd.nextFloat() < 0.5) world.playSound(player, finalPos, SoundEvents.ENTITY_ZOMBIE_AMBIENT, SoundCategory.AMBIENT, 1f, 1f);
+                toSpawn--;
 
-                    if (rnd.nextFloat() < 0.1) world.playSound(player, finalPos, SoundEvents.ENTITY_ZOMBIE_AMBIENT, SoundCategory.AMBIENT, 1f, 1f);
-                    player.playSound(SoundEvents.AMBIENT_NETHER_WASTES_MOOD.value(), SoundCategory.AMBIENT, 1, 1);
-                    world.spawnEntity(mob);
-                    HordesConfig.getHordeZombies().add(mob);
-                    toSpawn--;
-
-                    if (DEBUG) TheHordes.LOGGER.info("[SpawnWave] Spawning: " + mob);
-                }
+                if (DEBUG) TheHordes.LOGGER.info("[SpawnWave] Spawning: " + mob);
             }
+            player.playSound(SoundEvents.AMBIENT_NETHER_WASTES_MOOD.value(), SoundCategory.AMBIENT, 1, 1);
         }
     }
 

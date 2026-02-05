@@ -64,8 +64,8 @@ public class HordesConfig {
         this.hordesLimitPerPlayer = CONFIG.getOrDefault("hordes_limit_per_player", 160);
 
         onlyTargetPlayers = CONFIG.getOrDefault("only_target_players", true);
-        minRadius = CONFIG.getOrDefault("min_spawn_radius", 30);
-        maxRadius = CONFIG.getOrDefault("max_spawn_radius", 45);
+        minRadius = CONFIG.getOrDefault("min_spawn_radius", 40);
+        maxRadius = CONFIG.getOrDefault("max_spawn_radius", 50);
 
         this.spawnInOverworld = CONFIG.getOrDefault("spawn_in_overworld", true);
         this.spawnInNether = CONFIG.getOrDefault("spawn_in_nether", true);
@@ -115,9 +115,9 @@ public class HordesConfig {
                 # If false, hordes from different players, having no targets, will start attacking themselves
                 only_target_players = true
                 
-                # Spawn radius around the player (default: min = 30, max = 45)
-                min_spawn_radius = 30
-                max_spawn_radius = 45
+                # Spawn radius around the player (default: min = 40, max = 50)
+                min_spawn_radius = 40
+                max_spawn_radius = 50
                 
                 # Spawn hordes in dimension? (bool) (default: true)
                 # If false, waves doesnt spawn in that dimension

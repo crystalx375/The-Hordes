@@ -13,6 +13,7 @@ import static crystal.hordes.event.Despawner.despawnTimer;
 import static crystal.hordes.event.HordesManager.endHorde;
 import static crystal.hordes.event.HordesManager.startHorde;
 import static crystal.hordes.config.HordesConfig.*;
+import static crystal.hordes.event.SpawnWave.spawnWave;
 import static crystal.hordes.util.Nbt.loadState;
 import static crystal.hordes.util.Nbt.saveState;
 
@@ -40,7 +41,7 @@ public class TickHandler {
                 else if (world.getRegistryKey() == World.END && cfg.spawnInEnd) canSpawn = true;
 
                 if (canSpawn) {
-                    SpawnWave.spawnWave(world, mobPool);
+                    spawnWave(world, mobPool);
                     if (DEBUG) TheHordes.LOGGER.info("[TickHandler] Spawning wave in dimension: " + world.getRegistryKey().getValue());
                 } else {
                     TheHordes.LOGGER.warn("Cant spawn, because config spawn in that dimension = " + canSpawn + " (" + world.getRegistryKey().getValue().toString() + ")");

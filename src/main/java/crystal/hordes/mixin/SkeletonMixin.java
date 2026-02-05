@@ -30,7 +30,6 @@ public abstract class SkeletonMixin {
                 y -= distance * 0.12F;
                 if (distance > 45) y += distance * 0.03F;
                 else if (distance > 54) y += distance * 0.04F;
-                System.out.println(distance);
                 arrow.setVelocity(x, y, z, 3.5F, 0F);
             }
         } else {
