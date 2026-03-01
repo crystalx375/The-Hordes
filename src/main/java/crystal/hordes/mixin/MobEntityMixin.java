@@ -80,7 +80,7 @@ public abstract class MobEntityMixin extends LivingEntity implements HordesAcces
     private void applyHordeLogic() {
         MobEntity host = (MobEntity)(Object)this;
 
-        var rangeAttr = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
+        var rangeAttr = this.getAttributeInstance(EntityAttributes.FOLLOW_RANGE);
         if (rangeAttr != null) {
             rangeAttr.setBaseValue(64.0);
         }
@@ -96,14 +96,14 @@ public abstract class MobEntityMixin extends LivingEntity implements HordesAcces
 
         if (!HordesConfig.onlyTargetPlayers) {
             this.targetSelector.add(2, new ActiveTargetGoal<>(host, MobEntity.class, 10, false, true,
-                    (entity) -> {
+                    (entity, world) -> {
                         if (entity == host || !entity.isAlive()) return false;
                         if (entity instanceof PlayerEntity) return true;
                         return !(entity instanceof HordesAccessor accessor) || !accessor.the_Hordes$isHordeZombie();
                     }));
 
             this.targetSelector.add(3, new ActiveTargetGoal<>(host, MobEntity.class, 10, false, true,
-                    (entity) -> {
+                    (entity, world) -> {
                         if (entity == host || !entity.isAlive()) return false;
                         if (entity instanceof HordesAccessor accessor && accessor.the_Hordes$isHordeZombie()) {
                             UUID otherPlayerUuid = accessor.the_Hordes$getTargetPlayerUuid();

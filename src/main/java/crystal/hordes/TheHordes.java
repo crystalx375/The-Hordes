@@ -1,6 +1,5 @@
 package crystal.hordes;
 
-import crystal.hordes.config.HordesCommand;
 import crystal.hordes.event.TickHandler;
 import net.fabricmc.api.ModInitializer;
 

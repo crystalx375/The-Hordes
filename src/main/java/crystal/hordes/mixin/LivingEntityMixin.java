@@ -2,13 +2,12 @@ package crystal.hordes.mixin;
 
 import crystal.hordes.HordesAccessor;
 import crystal.hordes.event.Despawner;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.GameRules;
+import net.minecraft.server.world.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -27,11 +26,6 @@ public abstract class LivingEntityMixin extends Entity implements HordesAccessor
      * Изменяем дроп для хорд 💝💘💖
      */
     @Shadow protected int playerHitTimer;
-    @Shadow protected abstract boolean shouldDropLoot();
-    @Shadow protected abstract void dropLoot(DamageSource source, boolean causedByPlayer);
-    @Shadow protected abstract void dropEquipment(DamageSource source, int lootingMultiplier, boolean causedByPlayer);
-    @Shadow protected abstract void dropInventory();
-    @Shadow protected abstract void dropXp();
     @Unique private boolean wasHit = false;
     @Unique private boolean isHordeZombie;
     @Unique private UUID targetPlayerUuid;
@@ -52,7 +46,7 @@ public abstract class LivingEntityMixin extends Entity implements HordesAccessor
     public UUID the_Hordes$getTargetPlayerUuid() { return targetPlayerUuid; }
 
     @Inject(method = "drop", at = @At("HEAD"), cancellable = true)
-    protected void dropLootHordes(DamageSource source, CallbackInfo ci) {
+    protected void dropLootHordes(ServerWorld world, DamageSource source, CallbackInfo ci) {
         boolean despawned = Despawner.delayTimer == -2 && getHordeZombies().isEmpty();
         if (despawned) return;
         Entity attacker = source.getAttacker();
@@ -60,21 +54,11 @@ public abstract class LivingEntityMixin extends Entity implements HordesAccessor
             ci.cancel();
             return;
         }
-        int lootingLevel = EnchantmentHelper.getLooting((LivingEntity) attacker);
-        boolean causedByPlayer = this.playerHitTimer > 0;
-
-        if (this.shouldDropLoot() && this.getWorld().getGameRules().getBoolean(GameRules.DO_MOB_LOOT)) {
-            this.dropLoot(source, causedByPlayer);
-            this.dropEquipment(source, lootingLevel, causedByPlayer);
-        }
-        this.dropInventory();
-        this.dropXp();
-
         ci.cancel();
     }
 
     @Inject(method = "damage", at = @At("TAIL"))
-    private void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    private void onDamage(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (source.getAttacker() instanceof PlayerEntity) {
             this.wasHit = true;
         }
@@ -85,7 +69,7 @@ public abstract class LivingEntityMixin extends Entity implements HordesAccessor
         }
     }
     @Inject(method = "drop", at = @At("HEAD"))
-    private void adjustLootLogic(DamageSource source, CallbackInfo ci) {
+    private void adjustLootLogic(ServerWorld world, DamageSource damageSource, CallbackInfo ci) {
         if (this.wasHit) {
             this.playerHitTimer = 600;
         }

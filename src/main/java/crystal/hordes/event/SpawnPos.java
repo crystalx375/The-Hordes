@@ -4,6 +4,7 @@ import crystal.hordes.TheHordes;
 import crystal.hordes.config.HordesConfig;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -59,7 +60,7 @@ public class SpawnPos {
      * Проверки на место спавна
      */
     public static boolean isValidSpawn(ServerWorld world, EntityType<?> type, BlockPos pos) {
-        Entity temp = type.create(world);
+        Entity temp = type.create(world, SpawnReason.EVENT);
         if (temp == null) return false;
         boolean isNether = world.getRegistryKey() == World.NETHER;
         net.minecraft.util.math.Box box = temp.getType().getDimensions().getBoxAt(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);

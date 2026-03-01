@@ -4,6 +4,8 @@ import crystal.hordes.TheHordes;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
+
+import java.io.DataOutput;
 import java.io.File;
 
 import static crystal.hordes.config.HordesConfig.*;
@@ -25,7 +27,7 @@ public class Nbt {
             nbt.putInt("DelayTimer", delayTimer);
             nbt.putInt("internalDespawnTimer", internalDespawnTimer);
 
-            NbtIo.write(nbt, DATA_FILE);
+            NbtIo.write(nbt, DATA_FILE.toPath());
             if (DEBUG) TheHordes.LOGGER.info("[NBT] Saved state: ticks = " + ticks + ", active = " + active + ", waveTimer: " + waveTimer + ", i: " + i + ", delayTimer: " + delayTimer + " and internalDespawnTimer: " + internalDespawnTimer);
         } catch (Exception e) {
             TheHordes.LOGGER.error("Failed to save state: " + e.getMessage());
@@ -34,7 +36,7 @@ public class Nbt {
     public static void loadState() {
         if (!DATA_FILE.exists()) return;
         try {
-            NbtCompound nbt = NbtIo.read(DATA_FILE);
+            NbtCompound nbt = NbtIo.read(DATA_FILE.toPath());
             if (nbt != null) {
                 ticks = nbt.getInt("Ticks");
                 active = nbt.getBoolean("Active");

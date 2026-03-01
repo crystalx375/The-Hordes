@@ -67,12 +67,12 @@ public class SpawnWave {
 
                 // Даем случайные атрибуты мобу
                 MobEntity mob = spawnHordes(world, player, type, finalPos);
-                if (rnd.nextFloat() < 0.5) world.playSound(player, finalPos, SoundEvents.ENTITY_ZOMBIE_AMBIENT, SoundCategory.AMBIENT, 1f, 1f);
+                if (rnd.nextFloat() < 0.5) world.playSound(null, finalPos, SoundEvents.ENTITY_ZOMBIE_AMBIENT, SoundCategory.AMBIENT, 1f, 1f);
                 toSpawn--;
 
                 if (DEBUG) TheHordes.LOGGER.info("[SpawnWave] Spawning: " + mob);
             }
-            player.playSound(SoundEvents.AMBIENT_NETHER_WASTES_MOOD.value(), SoundCategory.AMBIENT, 1, 1);
+            player.getWorld().playSound(null, player.getBlockPos(), SoundEvents.AMBIENT_BASALT_DELTAS_MOOD.value(), SoundCategory.AMBIENT, 1f, 1f);
         }
     }
 

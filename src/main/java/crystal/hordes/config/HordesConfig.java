@@ -11,6 +11,7 @@ import net.minecraft.entity.mob.MobEntity;
 
 public class HordesConfig {
     private static HordesConfig INSTANCE;
+    private static final int version = 1;
     /**
      * Конфиг файл, использовал SimpleConfig и парс по ключам
      */
@@ -50,12 +51,16 @@ public class HordesConfig {
     public static boolean DEBUG;
     public static final int UPDATE_TIME = 50;
 
+    public static boolean disableSkeletonMixin;
+
     public boolean escapeByDimensionChange;
 
     // Использую SimpleConfig
     // https://github.com/magistermaks/fabric-simplelibs/blob/master/simple-config/SimpleConfig.java
     private HordesConfig() {
-        SimpleConfig CONFIG = SimpleConfig.of("hordes_common").provider(this::defaultConfig).request();
+        SimpleConfig CONFIG = SimpleConfig.of("hordes_common")
+                .provider(this::defaultConfig).version(version)
+                .request();
         this.daysBetweenHordes = CONFIG.getOrDefault("days_between_hordes", 7);
 
         this.hordeDuration = CONFIG.getOrDefault("hordes_duration", 6000);
@@ -92,8 +97,8 @@ public class HordesConfig {
     }
     private String defaultConfig(String filename) {
         return """
-                hordes = 0.1
-                # <------ The config is not updating, so delete it when you updating the mod version ------>
+                # The-Hordes
+                
                 # (20 ticks = 1 second)
                 # (1 day = 24000 ticks)
                 # Time when hordes event starts
