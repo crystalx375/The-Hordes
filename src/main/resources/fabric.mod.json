@@ -9,7 +9,8 @@
   ],
   "contact": {
     "homepage": "https://modrinth.com/project/the-hordes-fabric",
-    "sources": "https://github.com/crystalx375/The-Hordes"
+    "sources": "https://github.com/crystalx375/The-Hordes",
+    "issues": "https://github.com/crystalx375/The-Hordes/issues"
   },
   "license": "LGPLv2.1",
   "icon": "the_hordes_pray.png",
@@ -24,7 +25,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.16.10",
-    "minecraft": ">=1.21.4 <=1.21.11",
+    "minecraft": ">=1.21.2 <=1.21.4",
     "fabric-api": "*"
   }
 }

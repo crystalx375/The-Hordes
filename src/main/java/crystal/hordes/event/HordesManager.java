@@ -20,7 +20,7 @@ public class HordesManager {
     /**
      * Связующее всех классов для спавна орды
      */
-    private static int SleepPercentage = 100;
+    private static int SleepPercentage;
 
     public static void startHorde(ServerWorld world) {
         if (world == null || active) return;
@@ -34,7 +34,6 @@ public class HordesManager {
         rules.get(GameRules.PLAYERS_SLEEPING_PERCENTAGE).set(101, world.getServer());
         for (ServerPlayerEntity player : world.getServer().getPlayerManager().getPlayerList()) {
             player.sendMessage(Text.literal("§4Hordes is coming...").formatted(Formatting.DARK_RED), true);
-            player.playSound(SoundEvents.AMBIENT_NETHER_WASTES_MOOD.value());
         }
         TheHordes.LOGGER.info("Hordes started in {}", world.getRegistryKey().getValue());
         saveState();
