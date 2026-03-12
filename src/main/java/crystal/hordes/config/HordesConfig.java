@@ -11,6 +11,7 @@ import net.minecraft.entity.mob.MobEntity;
 
 public class HordesConfig {
     private static HordesConfig INSTANCE;
+    private static final int version = 1;
     /**
      * Конфиг файл, использовал SimpleConfig и парс по ключам
      */
@@ -50,12 +51,18 @@ public class HordesConfig {
     public static boolean DEBUG;
     public static final int UPDATE_TIME = 50;
 
+    public static boolean enableSkeletonMixin;
+    public static float adjustAccuracyChance;
+
     public boolean escapeByDimensionChange;
 
     // Использую SimpleConfig
     // https://github.com/magistermaks/fabric-simplelibs/blob/master/simple-config/SimpleConfig.java
     private HordesConfig() {
-        SimpleConfig CONFIG = SimpleConfig.of("hordes_common").provider(this::defaultConfig).request();
+        SimpleConfig CONFIG = SimpleConfig.of("hordes_common")
+                .provider(this::defaultConfig)
+                .version(version)
+                .request();
         this.daysBetweenHordes = CONFIG.getOrDefault("days_between_hordes", 7);
 
         this.hordeDuration = CONFIG.getOrDefault("hordes_duration", 6000);
@@ -75,6 +82,9 @@ public class HordesConfig {
 
         delayTicks = CONFIG.getOrDefault("delay_before_despawn", 12000);
 
+        enableSkeletonMixin = CONFIG.getOrDefault("enable_skeleton_adjust", true);
+        adjustAccuracyChance = (float) CONFIG.getOrDefault("adjust_accuracy_chance", 0.05);
+
         // (section) I don't recommend changing anything below unless you understand why
         this.overworld = parseMobMap(CONFIG.getOrDefault("mobs.overworld", "minecraft:zombie:5, minecraft:skeleton:1"));
         this.nether = parseMobMap(CONFIG.getOrDefault("mobs.nether", "minecraft:zombified_piglin:30, minecraft:hoglin:5, minecraft:ghast:1"));
@@ -92,8 +102,8 @@ public class HordesConfig {
     }
     private String defaultConfig(String filename) {
         return """
-                hordes = 0.1
-                # <------ The config is not updating, so delete it when you updating the mod version ------>
+                # The-Hordes
+                
                 # (20 ticks = 1 second)
                 # (1 day = 24000 ticks)
                 # Time when hordes event starts
@@ -114,6 +124,12 @@ public class HordesConfig {
                 # Will the hordes only attack the player? (bool) (default: true)
                 # If false, hordes from different players, having no targets, will start attacking themselves
                 only_target_players = true
+                
+                # Skeletons in horde
+                # Will be higher range and adjust? (bool) (default: true)
+                enable_skeleton_adjust = true
+                # Chance to arrow adjust accuracy (float) (default: 0.05)
+                adjust_accuracy_chance = 0.05
                 
                 # Spawn radius around the player (default: min = 40, max = 50)
                 min_spawn_radius = 40

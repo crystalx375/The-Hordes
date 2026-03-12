@@ -1,16 +1,13 @@
 package crystal.hordes.event;
 
-import crystal.hordes.HordesAccessor;
+import crystal.hordes.IHordes;
 import crystal.hordes.config.HordesConfig;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.pathing.PathNodeType;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.GhastEntity;
-import net.minecraft.entity.mob.PiglinEntity;
-import net.minecraft.entity.mob.ZombieHorseEntity;
+import net.minecraft.entity.mob.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -26,27 +23,28 @@ public class HordesVariations {
      * используется в SpawnWave
      */
     public static MobEntity spawnHordes(ServerWorld world, ServerPlayerEntity player, EntityType<?> type, BlockPos finalPos) {
-        Entity entity = type.create(world);
+        MobEntity mob = (MobEntity) type.create(world);
+        if (mob == null) return null;
         UUID playerUuid = player.getUuid();
         UUID clusterId = UUID.randomUUID();
         Random rnd = world.random;
-        if (entity instanceof MobEntity mob) {
-            prepareMob(mob, clusterId, playerUuid, finalPos, world, rnd);
-            if ((type == EntityType.SKELETON && rnd.nextFloat() < 0.2f) || (type == EntityType.ZOMBIE && rnd.nextFloat() < 0.01f)) {
-                ZombieHorseEntity horse = EntityType.ZOMBIE_HORSE.create(world);
-                if (horse != null) {
-                    horse.setTame(true);
-                    prepareMob(horse, clusterId, playerUuid, finalPos, world, rnd);
-                    world.spawnEntity(horse);
-                    mob.startRiding(horse);
-                }
+        prepareMob(mob, clusterId, playerUuid, finalPos, world, rnd);
+        if ((type == EntityType.SKELETON && rnd.nextFloat() < 0.2f) || (type == EntityType.ZOMBIE && rnd.nextFloat() < 0.01f)) {
+            ZombieHorseEntity horse = EntityType.ZOMBIE_HORSE.create(world);
+            if (horse != null) {
+                horse.setTame(true);
+                prepareMob(horse, clusterId, playerUuid, finalPos, world, rnd);
+                world.spawnEntity(horse);
+                mob.startRiding(horse);
             }
-            world.spawnEntity(mob);
-            HordesConfig.getHordeZombies().add(mob);
-
-            return mob;
         }
-        return null;
+        if (mob instanceof ZombieEntity zombie) {
+            zombie.setBaby(false);
+        }
+        world.spawnEntity(mob);
+        HordesConfig.getHordeZombies().add(mob);
+
+        return mob;
     }
 
     private static void giveHordeEquipment(MobEntity mob, Random rnd) {
@@ -75,7 +73,7 @@ public class HordesVariations {
     private static void prepareMob(MobEntity mob, UUID clusterId, UUID playerUuid, BlockPos pos, ServerWorld world, Random rnd) {
         double yOffset = (mob instanceof GhastEntity) ? 2.0 : 0.1;
         mob.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + yOffset, pos.getZ() + 0.5, rnd.nextFloat() * 360f, 0f);
-        ((HordesAccessor) mob).the_Hordes$setHordeZombie(true, clusterId, playerUuid);
+        ((IHordes) mob).the_Hordes$setHordeZombie(true, clusterId, playerUuid);
         mob.initialize(world, world.getLocalDifficulty(pos), SpawnReason.EVENT, null, null);
 
         if (mob instanceof PiglinEntity piglin) {

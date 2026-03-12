@@ -1,6 +1,6 @@
 package crystal.hordes.mixin;
 
-import crystal.hordes.HordesAccessor;
+import crystal.hordes.IHordes;
 import crystal.hordes.event.Despawner;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
@@ -22,7 +22,7 @@ import java.util.UUID;
 import static crystal.hordes.config.HordesConfig.*;
 
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin extends Entity implements HordesAccessor {
+public abstract class LivingEntityMixin extends Entity implements IHordes {
     /**
      * Изменяем дроп для хорд 💝💘💖
      */
@@ -79,7 +79,7 @@ public abstract class LivingEntityMixin extends Entity implements HordesAccessor
             this.wasHit = true;
         }
 
-        if (this.isHordeZombie && (Object)this instanceof Angerable angerable) {
+        if (this.isHordeZombie && (Object) this instanceof Angerable angerable) {
             angerable.setAngryAt(null);
             angerable.setAngerTime(0);
         }

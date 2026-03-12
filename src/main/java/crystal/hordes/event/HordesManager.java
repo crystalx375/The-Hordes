@@ -14,7 +14,6 @@ import java.util.*;
 
 import static crystal.hordes.event.Despawner.*;
 import static crystal.hordes.config.HordesConfig.*;
-import static crystal.hordes.util.Nbt.saveState;
 
 public class HordesManager {
     /**
@@ -37,7 +36,6 @@ public class HordesManager {
             player.playSound(SoundEvents.AMBIENT_NETHER_WASTES_MOOD.value(), SoundCategory.AMBIENT, 3.0f, 0.8f);
         }
         TheHordes.LOGGER.info("Hordes started in {}", world.getRegistryKey().getValue());
-        saveState();
     }
 
 
@@ -55,6 +53,5 @@ public class HordesManager {
         Despawner.startDespawnTimer();
         TheHordes.LOGGER.info("Hordes ended in {}", world.getRegistryKey().getValue());
         TheHordes.LOGGER.info("Waiting for delay: {} ticks", HordesConfig.delayTicks);
-        saveState();
     }
 }

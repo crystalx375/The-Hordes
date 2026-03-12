@@ -1,6 +1,6 @@
 package crystal.hordes.mixin;
 
-import crystal.hordes.HordesAccessor;
+import crystal.hordes.IHordes;
 import crystal.hordes.config.HordesConfig;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -24,7 +24,7 @@ import java.util.UUID;
 import static crystal.hordes.config.HordesConfig.getHordeZombies;
 
 @Mixin(MobEntity.class)
-public abstract class MobEntityMixin extends LivingEntity implements HordesAccessor {
+public abstract class MobEntityMixin extends LivingEntity implements IHordes {
     /**
      * Я не хочу делать это говно нахуй
      * Я ПОТРАТИЛ ДОХУЯ ВРЕМЕНИ НА ФИКС АААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААА
@@ -62,7 +62,7 @@ public abstract class MobEntityMixin extends LivingEntity implements HordesAcces
     // Меняю, так как через revenge goal не получилось
     @Inject(method = "setTarget", at = @At("HEAD"), cancellable = true)
     private void onSetTarget(LivingEntity target, CallbackInfo ci) {
-        if (this.isHordeMob && target instanceof HordesAccessor accessor) {
+        if (this.isHordeMob && target instanceof IHordes accessor) {
             if (accessor.the_Hordes$isHordeZombie()) {
                 UUID playerUuid = accessor.the_Hordes$getTargetPlayerUuid();
                 if (HordesConfig.onlyTargetPlayers) {
@@ -99,13 +99,13 @@ public abstract class MobEntityMixin extends LivingEntity implements HordesAcces
                     (entity) -> {
                         if (entity == host || !entity.isAlive()) return false;
                         if (entity instanceof PlayerEntity) return true;
-                        return !(entity instanceof HordesAccessor accessor) || !accessor.the_Hordes$isHordeZombie();
+                        return !(entity instanceof IHordes accessor) || !accessor.the_Hordes$isHordeZombie();
                     }));
 
             this.targetSelector.add(3, new ActiveTargetGoal<>(host, MobEntity.class, 10, false, true,
                     (entity) -> {
                         if (entity == host || !entity.isAlive()) return false;
-                        if (entity instanceof HordesAccessor accessor && accessor.the_Hordes$isHordeZombie()) {
+                        if (entity instanceof IHordes accessor && accessor.the_Hordes$isHordeZombie()) {
                             UUID otherPlayerUuid = accessor.the_Hordes$getTargetPlayerUuid();
                             return otherPlayerUuid != null && !otherPlayerUuid.equals(this.targetPlayerUuid);
                         }

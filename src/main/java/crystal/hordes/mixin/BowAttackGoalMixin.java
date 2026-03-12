@@ -1,6 +1,6 @@
 package crystal.hordes.mixin;
 
-import crystal.hordes.HordesAccessor;
+import crystal.hordes.IHordes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.BowAttackGoal;
 import net.minecraft.entity.mob.HostileEntity;
@@ -18,7 +18,7 @@ public abstract class BowAttackGoalMixin {
         BowAccessor accessor = (BowAccessor) goal;
         HostileEntity actor = accessor.getActor();
 
-        if (actor instanceof HordesAccessor horde && horde.the_Hordes$isHordeZombie()) {
+        if (actor instanceof IHordes horde && horde.the_Hordes$isHordeZombie()) {
             LivingEntity target = actor.getTarget();
 
             if (target != null) {

@@ -15,7 +15,6 @@ import static crystal.hordes.event.HordesManager.startHorde;
 import static crystal.hordes.config.HordesConfig.*;
 import static crystal.hordes.event.SpawnWave.spawnWave;
 import static crystal.hordes.util.Nbt.loadState;
-import static crystal.hordes.util.Nbt.saveState;
 
 public class TickHandler {
     static boolean firstTick = true;
@@ -56,7 +55,6 @@ public class TickHandler {
         if (DEBUG) TheHordes.LOGGER.info("[TickHandler] ticks: " + ticks);
         if (active) waveTimer += UPDATE_TIME;
         if (!firstTick && server.getTicks() % 1200 == 0) {
-            saveState();
         }
         HordesConfig cfg = HordesConfig.get();
         if (active && (waveTimer >= cfg.waveInterval || i < 1)) {
@@ -77,7 +75,6 @@ public class TickHandler {
         if (wave) {
             waveTimer = 0;
             wave = false;
-            saveState();
         }
 
         if (server.getCurrentPlayerCount() == 0) return;

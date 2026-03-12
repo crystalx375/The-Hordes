@@ -38,7 +38,7 @@ public class SpawnWave {
         int globalLimit = cfg.hordesLimitPerPlayer * playerCount;
 
         if (currentHordeCount >= globalLimit) {
-            TheHordes.LOGGER.info("[Hordes] Spawn canceled: " + currentHordeCount + " >= " + globalLimit);
+            TheHordes.LOGGER.info("Spawn canceled: " + currentHordeCount + " >= " + globalLimit);
             return;
         }
 
@@ -67,7 +67,7 @@ public class SpawnWave {
 
                 // Даем случайные атрибуты мобу
                 MobEntity mob = spawnHordes(world, player, type, finalPos);
-                if (rnd.nextFloat() < 0.5) world.playSound(player, finalPos, SoundEvents.ENTITY_ZOMBIE_AMBIENT, SoundCategory.AMBIENT, 1f, 1f);
+                if (rnd.nextFloat() < 0.5) world.playSound(null, finalPos, SoundEvents.ENTITY_ZOMBIE_AMBIENT, SoundCategory.AMBIENT, 1f, 1f);
                 toSpawn--;
 
                 if (DEBUG) TheHordes.LOGGER.info("[SpawnWave] Spawning: " + mob);
