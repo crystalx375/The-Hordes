@@ -2,7 +2,7 @@ package crystal.hordes;
 
 import java.util.UUID;
 
-public interface HordesAccessor {
+public interface IHordes {
     /**
      * Просто достаем через интерфейс для использования
      **/

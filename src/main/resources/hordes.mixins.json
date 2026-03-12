@@ -8,6 +8,7 @@
     "HoglinMixin",
     "LivingEntityMixin",
     "MobEntityMixin",
+    "ServerMixin",
     "SkeletonMixin"
   ],
   "client": [],
