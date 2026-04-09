@@ -2,6 +2,7 @@ package crystal.hordes.event;
 
 import crystal.hordes.IHordes;
 import crystal.hordes.config.HordesConfig;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
@@ -10,6 +11,7 @@ import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.mob.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -59,7 +61,11 @@ public class HordesVariations {
         if (mob instanceof net.minecraft.entity.mob.AbstractSkeletonEntity) {
             if (rnd.nextFloat() < 0.2f) {
                 ItemStack bow = new ItemStack(Items.BOW);
-                bow.addEnchantment(net.minecraft.enchantment.Enchantments.POWER, rnd.nextBetween(1, 5));
+                var registryManager = mob.getWorld().getRegistryManager();
+                var enchantmentRegistry = registryManager.getWrapperOrThrow(RegistryKeys.ENCHANTMENT);
+                var powerEnchantment = enchantmentRegistry.getOrThrow(Enchantments.POWER);
+
+                bow.addEnchantment(powerEnchantment, rnd.nextBetween(1, 5));
                 mob.equipStack(EquipmentSlot.MAINHAND, bow);
             }
         }
@@ -74,7 +80,7 @@ public class HordesVariations {
         double yOffset = (mob instanceof GhastEntity) ? 2.0 : 0.1;
         mob.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + yOffset, pos.getZ() + 0.5, rnd.nextFloat() * 360f, 0f);
         ((IHordes) mob).the_Hordes$setHordeZombie(true, clusterId, playerUuid);
-        mob.initialize(world, world.getLocalDifficulty(pos), SpawnReason.EVENT, null, null);
+        mob.initialize(world, world.getLocalDifficulty(pos), SpawnReason.EVENT, null);
 
         if (mob instanceof PiglinEntity piglin) {
             piglin.setImmuneToZombification(true);

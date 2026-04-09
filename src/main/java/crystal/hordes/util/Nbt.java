@@ -18,12 +18,12 @@ public class Nbt {
     public static void loadState() {
         if (!DATA_FILE.exists()) return;
         try {
-            NbtCompound nbt = NbtIo.read(DATA_FILE);
+            NbtCompound nbt = NbtIo.read(DATA_FILE.toPath());
             if (nbt != null) {
                 ticks = nbt.getInt("Ticks");
                 active = nbt.getBoolean("Active");
                 waveTimer = nbt.getInt("WaveTimer");
-                i = (byte) nbt.getInt("WaveIndex");
+                i = nbt.getInt("WaveIndex");
                 delayTimer = nbt.getInt("DelayTimer");
                 internalDespawnTimer = nbt.getInt("internalDespawnTimer");
                 if (DEBUG) TheHordes.LOGGER.info("[NBT] Loaded state: ticks = {}, active = {}, waveTimer: {}, i: {}, delayTimer: {} and internalDespawnTimer: {}", ticks, active, waveTimer, i, delayTimer, internalDespawnTimer);

@@ -5,6 +5,10 @@ import crystal.hordes.config.HordesConfig;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -74,6 +78,7 @@ public class Despawner {
             }
 
             if (z.getWorld() instanceof ServerWorld server) {
+                z.getWorld().playSound(null, BlockPos.ofFloored(z.getPos()), SoundEvents.ENTITY_ZOMBIE_VILLAGER_CURE, SoundCategory.AMBIENT, 0.3f, 1f);
                 server.spawnParticles(ParticleTypes.SMOKE, z.getX(), z.getY() + 1, z.getZ(), 10, 0.2, 0.5, 0.2, 0.05);
                 z.discard();
                 iter.remove();

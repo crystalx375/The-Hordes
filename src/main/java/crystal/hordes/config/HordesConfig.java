@@ -39,7 +39,7 @@ public class HordesConfig {
     public boolean spawnInEnd;
     public static boolean onlyTargetPlayers;
 
-    public static byte i = 0;
+    public static int i = 0;
     public static boolean active = false;
     public static int ticks = 0;
     public static int waveTimer = 0;
@@ -83,7 +83,7 @@ public class HordesConfig {
         delayTicks = CONFIG.getOrDefault("delay_before_despawn", 12000);
 
         enableSkeletonMixin = CONFIG.getOrDefault("enable_skeleton_adjust", true);
-        adjustAccuracyChance = (float) CONFIG.getOrDefault("adjust_accuracy_chance", 0.05);
+        adjustAccuracyChance = (float) CONFIG.getOrDefault("adjust_accuracy_chance", 0.1);
 
         // (section) I don't recommend changing anything below unless you understand why
         this.overworld = parseMobMap(CONFIG.getOrDefault("mobs.overworld", "minecraft:zombie:5, minecraft:skeleton:1"));

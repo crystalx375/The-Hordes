@@ -4,10 +4,13 @@ import crystal.hordes.IHordes;
 import crystal.hordes.event.Despawner;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.Angerable;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.GameRules;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,9 +32,7 @@ public abstract class LivingEntityMixin extends Entity implements IHordes {
     @Shadow protected int playerHitTimer;
     @Shadow protected abstract boolean shouldDropLoot();
     @Shadow protected abstract void dropLoot(DamageSource source, boolean causedByPlayer);
-    @Shadow protected abstract void dropEquipment(DamageSource source, int lootingMultiplier, boolean causedByPlayer);
     @Shadow protected abstract void dropInventory();
-    @Shadow protected abstract void dropXp();
     @Unique private boolean wasHit = false;
     @Unique private boolean isHordeZombie;
     @Unique private UUID targetPlayerUuid;
@@ -52,25 +53,28 @@ public abstract class LivingEntityMixin extends Entity implements IHordes {
     public UUID the_Hordes$getTargetPlayerUuid() { return targetPlayerUuid; }
 
     @Inject(method = "drop", at = @At("HEAD"), cancellable = true)
-    protected void dropLootHordes(DamageSource source, CallbackInfo ci) {
+    protected void dropLootHordes(ServerWorld world, DamageSource source, CallbackInfo ci) {
         boolean despawned = Despawner.delayTimer == -2 && getHordeZombies().isEmpty();
         if (despawned) return;
-        Entity attacker = source.getAttacker();
-        if (!(attacker instanceof PlayerEntity)) {
+
+        if (source.getSource() instanceof IHordes || source.getAttacker() instanceof IHordes) {
+            Entity attacker = source.getAttacker();
+            boolean causedByPlayer = this.playerHitTimer > 0;
+
+            if (!(attacker instanceof PlayerEntity)) {
+                ci.cancel();
+                return;
+            }
+
+            if (this.shouldDropLoot() && this.getWorld().getGameRules().getBoolean(GameRules.DO_MOB_LOOT)) {
+                this.dropLoot(source, causedByPlayer);
+            }
+
+            ExperienceOrbEntity.spawn(world, this.getPos(), EnchantmentHelper.getMobExperience(world, attacker, this, 10));
+            this.dropInventory();
+
             ci.cancel();
-            return;
         }
-        int lootingLevel = EnchantmentHelper.getLooting((LivingEntity) attacker);
-        boolean causedByPlayer = this.playerHitTimer > 0;
-
-        if (this.shouldDropLoot() && this.getWorld().getGameRules().getBoolean(GameRules.DO_MOB_LOOT)) {
-            this.dropLoot(source, causedByPlayer);
-            this.dropEquipment(source, lootingLevel, causedByPlayer);
-        }
-        this.dropInventory();
-        this.dropXp();
-
-        ci.cancel();
     }
 
     @Inject(method = "damage", at = @At("TAIL"))
@@ -85,7 +89,7 @@ public abstract class LivingEntityMixin extends Entity implements IHordes {
         }
     }
     @Inject(method = "drop", at = @At("HEAD"))
-    private void adjustLootLogic(DamageSource source, CallbackInfo ci) {
+    private void adjustLootLogic(ServerWorld world, DamageSource damageSource, CallbackInfo ci) {
         if (this.wasHit) {
             this.playerHitTimer = 600;
         }

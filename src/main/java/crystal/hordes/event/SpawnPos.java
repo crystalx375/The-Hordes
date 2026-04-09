@@ -47,12 +47,12 @@ public class SpawnPos {
 
             if (finalPos != null && isValidSpawn(world, checkType, finalPos)) {
                 if (areaCheck(world, finalPos)) {
-                    TheHordes.LOGGER.info("[Hordes] Spawn: " + finalPos + " For player: " + player.getName().getString());
+                    TheHordes.LOGGER.info("Spawn: " + finalPos + " For player: " + player.getName().getString());
                     return finalPos;
                 }
             }
         }
-        TheHordes.LOGGER.warn("[Hordes] Spawn is not valid");
+        TheHordes.LOGGER.warn("Spawn is not valid");
         return null;
     }
     /**

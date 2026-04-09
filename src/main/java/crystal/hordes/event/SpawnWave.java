@@ -72,7 +72,7 @@ public class SpawnWave {
 
                 if (DEBUG) TheHordes.LOGGER.info("[SpawnWave] Spawning: " + mob);
             }
-            player.playSound(SoundEvents.AMBIENT_NETHER_WASTES_MOOD.value(), SoundCategory.AMBIENT, 1, 1);
+            player.getWorld().playSound(null, basePos, SoundEvents.AMBIENT_NETHER_WASTES_MOOD.value(), SoundCategory.AMBIENT, 5f, 1f);
         }
     }
 

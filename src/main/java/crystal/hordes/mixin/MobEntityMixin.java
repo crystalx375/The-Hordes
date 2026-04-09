@@ -25,10 +25,7 @@ import static crystal.hordes.config.HordesConfig.getHordeZombies;
 
 @Mixin(MobEntity.class)
 public abstract class MobEntityMixin extends LivingEntity implements IHordes {
-    /**
-     * Я не хочу делать это говно нахуй
-     * Я ПОТРАТИЛ ДОХУЯ ВРЕМЕНИ НА ФИКС АААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААА
-     */
+
     @Shadow @Final protected GoalSelector goalSelector;
     @Shadow @Final protected GoalSelector targetSelector;
 
