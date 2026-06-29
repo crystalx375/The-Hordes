@@ -18,18 +18,18 @@ public class Nbt {
     public static void loadState() {
         if (!DATA_FILE.exists()) return;
         try {
-            NbtCompound nbt = NbtIo.read(DATA_FILE.toPath());
+            final NbtCompound nbt = NbtIo.read(DATA_FILE.toPath());
             if (nbt != null) {
-                ticks = nbt.getInt("Ticks");
-                active = nbt.getBoolean("Active");
-                waveTimer = nbt.getInt("WaveTimer");
-                i = nbt.getInt("WaveIndex");
+                int ticks = nbt.getInt("Ticks");
+                final boolean ACTIVE = nbt.getBoolean("Active");
+                int waveTimer = nbt.getInt("WaveTimer");
+                int i = nbt.getInt("WaveIndex");
                 delayTimer = nbt.getInt("DelayTimer");
                 internalDespawnTimer = nbt.getInt("internalDespawnTimer");
-                if (DEBUG) TheHordes.LOGGER.info("[NBT] Loaded state: ticks = {}, active = {}, waveTimer: {}, i: {}, delayTimer: {} and internalDespawnTimer: {}", ticks, active, waveTimer, i, delayTimer, internalDespawnTimer);
+                if (DEBUG) TheHordes.LOGGER.info("[NBT] Loaded state: ticks = {}, active = {}, waveTimer: {}, i: {}, delayTimer: {} and internalDespawnTimer: {}", ticks, ACTIVE, waveTimer, i, delayTimer, internalDespawnTimer);
             }
         } catch (Exception e) {
-            TheHordes.LOGGER.error("Failed to load state: " + e.getMessage());
+            TheHordes.LOGGER.error("Failed to load state");
         }
     }
 }

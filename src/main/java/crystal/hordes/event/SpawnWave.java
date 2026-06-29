@@ -13,7 +13,6 @@ import net.minecraft.util.math.random.Random;
 
 import java.util.Map;
 
-import static crystal.hordes.config.HordesConfig.DEBUG;
 import static crystal.hordes.config.HordesConfig.get;
 import static crystal.hordes.event.HordesVariations.spawnHordes;
 import static crystal.hordes.event.SpawnPos.spawnCluster;
@@ -32,10 +31,9 @@ public class SpawnWave {
         final int currentHordeCount = HordesConfig.getHordeZombies().size();
         final Random rnd = world.getRandom();
 
-        final HordesConfig cfg = get();
         HordesConfig.getHordeZombies().removeIf(mob -> mob == null || !mob.isAlive() || mob.isRemoved());
 
-        final int globalLimit = cfg.hordesLimitPerPlayer * playerCount;
+        final int globalLimit = HordesConfig.HORDES_LIMIT_PER_PLAYER * playerCount;
 
         if (currentHordeCount >= globalLimit) {
             TheHordes.LOGGER.info("Spawn canceled: {} >= {}", currentHordeCount, globalLimit);
@@ -48,7 +46,7 @@ public class SpawnWave {
         for (ServerPlayerEntity player : world.getPlayers()) {
             if (player.getWorld() != world) continue;
 
-            int toSpawn = cfg.zombiesPerWave;
+            int toSpawn = HordesConfig.ZOMBIES_PER_WAVE;
             int attempts = 0;
 
             final BlockPos basePos = SpawnPos.findSpawnAroundPlayer(world, player, null, rnd);
@@ -70,14 +68,14 @@ public class SpawnWave {
             if (rnd.nextFloat() < 0.5) world.playSound(null, finalPos, SoundEvents.ENTITY_ZOMBIE_AMBIENT, SoundCategory.AMBIENT, 1f, 1f);
             toSpawn--;
 
-            if (DEBUG) TheHordes.LOGGER.info("[SpawnWave] Spawning: {}", mob);
+            if (get().DEBUG) TheHordes.LOGGER.info("[SpawnWave] Spawning: {}", mob);
         }
     }
 
     // Саппорт класс
     private static EntityType<?> getRandomMobByWeight(Map<String, Integer> mobMap, Random rnd) {
-        int totalWeight = mobMap.values().stream().mapToInt(Integer::intValue).sum();
-        int r = rnd.nextInt(totalWeight);
+        final int totalWeight = mobMap.values().stream().mapToInt(Integer::intValue).sum();
+        final int r = rnd.nextInt(totalWeight);
         int count = 0;
         for (Map.Entry<String, Integer> entry : mobMap.entrySet()) {
             count += entry.getValue();

@@ -59,14 +59,17 @@ public abstract class MobEntityMixin extends LivingEntity implements IHordes {
     // Меняю, так как через revenge goal не получилось
     @Inject(method = "setTarget", at = @At("HEAD"), cancellable = true)
     private void onSetTarget(LivingEntity target, CallbackInfo ci) {
-        if (this.isHordeMob && target instanceof IHordes accessor && accessor.the_Hordes$isHordeZombie()) {
-            UUID playerUuid = accessor.the_Hordes$getTargetPlayerUuid();
-            if (HordesConfig.onlyTargetPlayers) {
-                ci.cancel();
-            } else {
+        if (this.isHordeMob) {
+            if (target instanceof IHordes accessor && accessor.the_Hordes$isHordeZombie()) {
+                final UUID playerUuid = accessor.the_Hordes$getTargetPlayerUuid();
                 if (playerUuid != null && playerUuid.equals(this.targetPlayerUuid)) {
                     ci.cancel();
+                    return;
                 }
+            }
+
+            if (HordesConfig.get().ONLY_TARGET_PLAYERS && !(target instanceof PlayerEntity)) {
+                ci.cancel();
             }
         }
     }
@@ -79,35 +82,32 @@ public abstract class MobEntityMixin extends LivingEntity implements IHordes {
         if (rangeAttr != null) {
             rangeAttr.setBaseValue(64.0);
         }
+
         this.goalSelector.getGoals().removeIf(goal ->
                 goal.getGoal() instanceof StepAndDestroyBlockGoal ||
                         goal.getGoal() instanceof MoveThroughVillageGoal ||
                         goal.getGoal() instanceof AvoidSunlightGoal
         );
-        this.goalSelector.getGoals().removeIf(goal -> goal.getGoal() instanceof RevengeGoal);
-        this.goalSelector.getGoals().removeIf(goal -> goal.getGoal() instanceof ActiveTargetGoal);
+        this.targetSelector.getGoals().removeIf(goal ->
+                goal.getGoal() instanceof RevengeGoal ||
+                        goal.getGoal() instanceof ActiveTargetGoal
+        );
 
         this.targetSelector.add(1, new ActiveTargetGoal<>(host, PlayerEntity.class, 10, false, true, null));
-
+        setTargetSelector(host);
     }
 
     @Unique private void setTargetSelector(MobEntity host) {
-        if (!HordesConfig.onlyTargetPlayers) {
+        if (!HordesConfig.get().ONLY_TARGET_PLAYERS) {
             this.targetSelector.add(2, new ActiveTargetGoal<>(host, MobEntity.class, 10, false, true,
-                    entity -> {
-                        if (entity == host || !entity.isAlive()) return false;
-                        if (entity instanceof PlayerEntity) return true;
-                        return !(entity instanceof IHordes accessor) || !accessor.the_Hordes$isHordeZombie();
-                    }));
-
-            this.targetSelector.add(3, new ActiveTargetGoal<>(host, MobEntity.class, 10, false, true,
                     entity -> {
                         if (entity == host || !entity.isAlive()) return false;
                         if (entity instanceof IHordes accessor && accessor.the_Hordes$isHordeZombie()) {
                             UUID otherPlayerUuid = accessor.the_Hordes$getTargetPlayerUuid();
                             return otherPlayerUuid != null && !otherPlayerUuid.equals(this.targetPlayerUuid);
                         }
-                        return false;
+
+                        return true;
                     }));
         }
 

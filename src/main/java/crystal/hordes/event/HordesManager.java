@@ -18,11 +18,11 @@ public class HordesManager {
     private static int sleepPercentage = 100;
 
     public static void startHorde(ServerWorld world) {
-        if (world == null || active) return;
-        active = true;
-        ticks = 0;
-        waveTimer = 0;
-        i = 0;
+        if (world == null || HordesConfig.isActive()) return;
+        HordesConfig.setActive(true);
+        HordesConfig.setTicks(0);
+        HordesConfig.setWaveTimer(0);
+        HordesConfig.setI(0);
         delayTimer = -9;
         final GameRules rules = world.getGameRules();
         sleepPercentage = rules.getInt(GameRules.PLAYERS_SLEEPING_PERCENTAGE);
@@ -35,18 +35,18 @@ public class HordesManager {
 
 
     public static void endHorde(ServerWorld world) {
-        if (world == null || !active) return;
+        if (world == null || !HordesConfig.isActive()) return;
         getHordeZombies().removeIf(mob -> mob == null || !mob.isAlive());
-        active = false;
-        ticks = 0;
-        waveTimer = 0;
-        i = 0;
+        HordesConfig.setActive(false);
+        HordesConfig.setTicks(0);
+        HordesConfig.setWaveTimer(0);
+        HordesConfig.setI(0);
         world.getGameRules().get(GameRules.PLAYERS_SLEEPING_PERCENTAGE).set(sleepPercentage, world.getServer());
         for (ServerPlayerEntity player : world.getServer().getPlayerManager().getPlayerList()) {
             player.sendMessage(Text.literal("§4Hordes ended...").formatted(Formatting.DARK_RED), true);
         }
         Despawner.startDespawnTimer();
         TheHordes.LOGGER.info("Hordes ended in {}", world.getRegistryKey().getValue());
-        TheHordes.LOGGER.info("Waiting for delay: {} ticks", HordesConfig.delayTicks);
+        TheHordes.LOGGER.info("Waiting for delay: {} ticks", get().DELAY_TICKS);
     }
 }

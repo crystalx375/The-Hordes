@@ -10,96 +10,91 @@ import crystal.hordes.util.SimpleConfig;
 import net.minecraft.entity.mob.MobEntity;
 
 public class HordesConfig {
-    private static HordesConfig INSTANCE;
-    private static final int version = 1;
-    /**
-     * Конфиг файл, использовал SimpleConfig и парс по ключам
-     */
-    public int daysBetweenHordes;
-    public int hordeDuration;
-    public int waveInterval;
-    public int zombiesPerWave;
-    public static int delayTicks;
-    public static int DESPAWN_INTERVAL_TICKS;
-    public static double FACTOR_SIZE;
-    public static int PER_DESPAWN;
-    public static int minRadius;
-    public static int maxRadius;
-    public int hordesLimitPerPlayer;
-    public static float maxCluster;
-    public static float minCluster;
-    public static boolean required_night;
+    private static final int VERSION = 1;
+    private static HordesConfig instance;
 
-    public final Map<String, Integer> overworld;
-    public final Map<String, Integer> nether;
-    public final Map<String, Integer> end;
-
-    public boolean spawnInOverworld;
-    public boolean spawnInNether;
-    public boolean spawnInEnd;
-    public static boolean onlyTargetPlayers;
-
-    public static int i = 0;
-    public static boolean active = false;
-    public static int ticks = 0;
-    public static int waveTimer = 0;
-    // Свет при котором спавн может быть <= requiredLightLevel
-    public static final int requiredLightLevel = 5;
+    // Стейт-переменные (они изменяются в процессе игры, final быть не могут, но убираем из конструктора)
+    private static int i = 0;
+    private static boolean active = false;
+    private static int ticks = 0;
+    private static int waveTimer = 0;
     private static final Set<MobEntity> hordeZombies = new HashSet<>();
-    public static Set<MobEntity> getHordeZombies() { return hordeZombies; }
 
-    public static boolean DEBUG;
+    // Неизменяемые настройки конфигурации (теперь все public final)
+    public static final int DAYS_BETWEEN_HORDES;
+    public static final int HORDE_DURATION;
+    public static final int WAVE_INTERVAL;
+    public static final int ZOMBIES_PER_WAVE;
+    public static final int DELAY_TICKS;
+    public static final int DESPAWN_INTERVAL_TICKS;
+    public static final double FACTOR_SIZE;
+    public static final int PER_DESPAWN;
+    public static final int MIN_RADIUS;
+    public static final int MAX_RADIUS;
+    public static final int HORDES_LIMIT_PER_PLAYER;
+    public static final float MAX_CLUSTER;
+    public static final float MIN_CLUSTER;
+    public static final boolean REQUIRED_NIGHT;
+
+    public static final Map<String, Integer> overworld;
+    public static final Map<String, Integer> nether;
+    public static final Map<String, Integer> end;
+
+    public static final boolean SPAWN_IN_OVERWORLD;
+    public static final boolean SPAWN_IN_NETHER;
+    public static final boolean SPAWN_IN_END;
+    public static final boolean ONLY_TARGET_PLAYERS;
+
+    public static final boolean DEBUG;
+    public static final boolean ENABLE_SKELETON_MIXIN;
+    public static final float ADJUST_ACCURACY_CHANCE;
+
+    // Константы
+    public static final int REQUIRED_LIGHT_LEVEL = 5;
     public static final int UPDATE_TIME = 50;
 
-    public static boolean enableSkeletonMixin;
-    public static float adjustAccuracyChance;
+    static {
+        HordesConfig helper = new HordesConfig();
 
-    public boolean escapeByDimensionChange;
-
-    // Использую SimpleConfig
-    // https://github.com/magistermaks/fabric-simplelibs/blob/master/simple-config/SimpleConfig.java
-    private HordesConfig() {
-        SimpleConfig CONFIG = SimpleConfig.of("hordes_common")
-                .provider(this::defaultConfig)
-                .version(version)
+        SimpleConfig config = SimpleConfig.of("hordes_common")
+                .provider(helper::defaultConfig)
+                .version(VERSION)
                 .request();
-        this.daysBetweenHordes = CONFIG.getOrDefault("days_between_hordes", 7);
 
-        this.hordeDuration = CONFIG.getOrDefault("hordes_duration", 6000);
-        this.waveInterval = CONFIG.getOrDefault("wave_interval", 1000);
-        this.zombiesPerWave = CONFIG.getOrDefault("mobs_per_wave", 50);
-        this.hordesLimitPerPlayer = CONFIG.getOrDefault("hordes_limit_per_player", 160);
+        DAYS_BETWEEN_HORDES = config.getOrDefault("days_between_hordes", 7);
+        HORDE_DURATION = config.getOrDefault("hordes_duration", 6000);
+        WAVE_INTERVAL = config.getOrDefault("wave_interval", 1000);
+        ZOMBIES_PER_WAVE = config.getOrDefault("mobs_per_wave", 50);
+        HORDES_LIMIT_PER_PLAYER = config.getOrDefault("hordes_limit_per_player", 160);
 
-        onlyTargetPlayers = CONFIG.getOrDefault("only_target_players", true);
-        minRadius = CONFIG.getOrDefault("min_spawn_radius", 40);
-        maxRadius = CONFIG.getOrDefault("max_spawn_radius", 50);
+        ONLY_TARGET_PLAYERS = config.getOrDefault("only_target_players", true);
+        MIN_RADIUS = config.getOrDefault("min_spawn_radius", 40);
+        MAX_RADIUS = config.getOrDefault("max_spawn_radius", 50);
 
-        this.spawnInOverworld = CONFIG.getOrDefault("spawn_in_overworld", true);
-        this.spawnInNether = CONFIG.getOrDefault("spawn_in_nether", true);
-        this.spawnInEnd = CONFIG.getOrDefault("spawn_in_end", true);
+        SPAWN_IN_OVERWORLD = config.getOrDefault("spawn_in_overworld", true);
+        SPAWN_IN_NETHER = config.getOrDefault("spawn_in_nether", true);
+        SPAWN_IN_END = config.getOrDefault("spawn_in_end", true);
 
-        required_night = CONFIG.getOrDefault("required_night", true);
+        REQUIRED_NIGHT = config.getOrDefault("required_night", true);
+        DELAY_TICKS = config.getOrDefault("delay_before_despawn", 12000);
 
-        delayTicks = CONFIG.getOrDefault("delay_before_despawn", 12000);
+        ENABLE_SKELETON_MIXIN = config.getOrDefault("enable_skeleton_adjust", true);
+        ADJUST_ACCURACY_CHANCE = ((Double) config.getOrDefault("adjust_accuracy_chance", 0.05)).floatValue();
 
-        enableSkeletonMixin = CONFIG.getOrDefault("enable_skeleton_adjust", true);
-        adjustAccuracyChance = (float) CONFIG.getOrDefault("adjust_accuracy_chance", 0.1);
+        overworld = helper.parseMobMap(config.getOrDefault("mobs.overworld", "minecraft:zombie:5, minecraft:skeleton:1"));
+        nether = helper.parseMobMap(config.getOrDefault("mobs.nether", "minecraft:zombified_piglin:30, minecraft:hoglin:5, minecraft:ghast:1"));
+        end = helper.parseMobMap(config.getOrDefault("mobs.end", "minecraft:phantom:10"));
 
-        // (section) I don't recommend changing anything below unless you understand why
-        this.overworld = parseMobMap(CONFIG.getOrDefault("mobs.overworld", "minecraft:zombie:5, minecraft:skeleton:1"));
-        this.nether = parseMobMap(CONFIG.getOrDefault("mobs.nether", "minecraft:zombified_piglin:30, minecraft:hoglin:5, minecraft:ghast:1"));
-        this.end = parseMobMap(CONFIG.getOrDefault("mobs.end", "minecraft:phantom:10"));
-        DESPAWN_INTERVAL_TICKS = CONFIG.getOrDefault("despawn_interval", 50);
-        PER_DESPAWN = CONFIG.getOrDefault("mobs_per_despawn", 1);
-        FACTOR_SIZE = CONFIG.getOrDefault("factor_size", 0.05D);
-        DEBUG = CONFIG.getOrDefault("debug", false);
+        DESPAWN_INTERVAL_TICKS = config.getOrDefault("despawn_interval", 50);
+        PER_DESPAWN = config.getOrDefault("mobs_per_despawn", 1);
+        FACTOR_SIZE = config.getOrDefault("factor_size", 0.05D);
+        DEBUG = config.getOrDefault("debug", false);
 
-        // Используется для адаптивного размера кластера
-        // Сделано для того, чтобы колизия между мобами при спавне была минимальная
-        // Размеры кластера
-        maxCluster = (float) (5 + 0.1 * this.zombiesPerWave);
-        minCluster = (float) (2 + 0.05 * this.zombiesPerWave);
+        MAX_CLUSTER = (float) (5 + 0.1 * ZOMBIES_PER_WAVE);
+        MIN_CLUSTER = (float) (2 + 0.05 * ZOMBIES_PER_WAVE);
     }
+    private HordesConfig() {}
+
     private String defaultConfig(String filename) {
         return """
                 # The-Hordes
@@ -199,15 +194,25 @@ public class HordesConfig {
                 }
             }
         } catch (Exception e) {
-            TheHordes.LOGGER.error("Failed to parse mob map: " + raw);
+            TheHordes.LOGGER.error("Failed to parse mob map: {}", raw);
         }
         return map.isEmpty() ? Map.of("minecraft:zombie", 100) : map;
     }
-    // Инициализация
+
+    public static Set<MobEntity> getHordeZombies() { return hordeZombies; }
+    public static int getI() { return i; }
+    public static void setI(int value) { i = value; }
+    public static boolean isActive() { return active; }
+    public static void setActive(boolean value) { active = value; }
+    public static int getTicks() { return ticks; }
+    public static void setTicks(int value) { ticks = value; }
+    public static int getWaveTimer() { return waveTimer; }
+    public static void setWaveTimer(int value) { waveTimer = value; }
+
     public static HordesConfig get() {
-        if (INSTANCE == null) {
-            INSTANCE = new HordesConfig();
+        if (instance == null) {
+            instance = new HordesConfig();
         }
-        return INSTANCE;
+        return instance;
     }
 }

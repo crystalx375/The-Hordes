@@ -16,8 +16,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Random;
 
-import static crystal.hordes.config.HordesConfig.adjustAccuracyChance;
-import static crystal.hordes.config.HordesConfig.enableSkeletonMixin;
+import static crystal.hordes.config.HordesConfig.ADJUST_ACCURACY_CHANCE;
+import static crystal.hordes.config.HordesConfig.ENABLE_SKELETON_MIXIN;
 
 @Mixin(AbstractSkeletonEntity.class)
 public abstract class SkeletonMixin {
@@ -28,7 +28,7 @@ public abstract class SkeletonMixin {
     @Unique
     private static double random(int range) {
         final float f = rnd.nextFloat();
-        if (f > adjustAccuracyChance) {
+        if (f > ADJUST_ACCURACY_CHANCE) {
             final double d = Math.sqrt(range);
             final double r = d / 2;
             return r * r;
@@ -38,14 +38,14 @@ public abstract class SkeletonMixin {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void initCustomGoal(EntityType entityType, World world, CallbackInfo ci) {
-        if (enableSkeletonMixin) {
+        if (ENABLE_SKELETON_MIXIN) {
             this.bowAttackGoal = new BowAttackGoal<>((AbstractSkeletonEntity) (Object) this, 1.0D, 20, 40F);
         }
     }
 
     @Inject(method = "shootAt", at = @At("HEAD"), cancellable = true)
     private void fix(LivingEntity target, float pullProgress, CallbackInfo ci) {
-        if (!(enableSkeletonMixin)) return;
+        if (!(ENABLE_SKELETON_MIXIN)) return;
         final AbstractSkeletonEntity skeleton = (AbstractSkeletonEntity) (Object) this;
         if (target != null) {
             final double distanceSq = skeleton.squaredDistanceTo(target);
@@ -64,7 +64,7 @@ public abstract class SkeletonMixin {
     )
     private void adjustAccuracy(PersistentProjectileEntity instance, double x, double y, double z, float power, float uncertainty) {
         final AbstractSkeletonEntity skeleton = (AbstractSkeletonEntity) (Object) this;
-        if (enableSkeletonMixin && skeleton instanceof IHordes horde && horde.the_Hordes$isHordeZombie()) {
+        if (ENABLE_SKELETON_MIXIN && skeleton instanceof IHordes horde && horde.the_Hordes$isHordeZombie()) {
             final Entity target = skeleton.getTarget();
             if (target != null) {
                 final double dX = target.getX() - skeleton.getX();

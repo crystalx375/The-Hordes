@@ -13,33 +13,31 @@ import net.minecraft.world.Heightmap;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 
-import static crystal.hordes.config.HordesConfig.*;
-import static crystal.hordes.config.HordesConfig.maxCluster;
-import static crystal.hordes.config.HordesConfig.minCluster;
-
 
 public class SpawnPos {
+    private static final int MIN_RADIUS = HordesConfig.MIN_RADIUS;
+    private static final int MAX_RADIUS = HordesConfig.MAX_RADIUS;
     /**
      * Поиск места по радиусу
      * Также поиск для незера разделен так как там нельзя topY сделать (крышу ада всегда будет возвращать)
      */
     public static BlockPos findSpawnAroundPlayer(ServerWorld world, ServerPlayerEntity player, EntityType<?> type, Random rnd) {
         boolean isNether = world.getRegistryKey() == World.NETHER;
-        int minR = isNether ? HordesConfig.minRadius / 2 : HordesConfig.minRadius;
-        int maxR = isNether ? HordesConfig.maxRadius / 2 : HordesConfig.maxRadius;
+        final int minR = isNether ? MIN_RADIUS / 2 : MIN_RADIUS;
+        final int maxR = isNether ? MAX_RADIUS / 2 : MAX_RADIUS;
         EntityType<?> checkType = type != null ? type : EntityType.ZOMBIE;
 
         for (int tries = 0; tries < 75; tries++) {
-            double angle = rnd.nextDouble() * 2.0 * Math.PI;
-            double r = Math.sqrt(rnd.nextDouble() * (maxR * maxR - minR * minR) + (minR * minR));
-            int x = (int) (r * Math.cos(angle));
-            int z = (int) (r * Math.sin(angle));
+            final double angle = rnd.nextDouble() * 2.0 * Math.PI;
+            final double r = Math.sqrt(rnd.nextDouble() * (maxR * maxR - minR * minR) + (minR * minR));
+            final int x = (int) (r * Math.cos(angle));
+            final int z = (int) (r * Math.sin(angle));
 
             BlockPos targetPos = player.getBlockPos().add(x, 0, z);
             BlockPos finalPos;
 
             if (isNether) {
-                int y = Math.min((int)player.getY() + 20, 130);
+                final int y = Math.min((int)player.getY() + 20, 130);
                 finalPos = findSurfaceInNether(world, player, targetPos.getX(), y, targetPos.getZ());
             } else {
                 int surface = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, targetPos.getX(), targetPos.getZ());
@@ -67,7 +65,7 @@ public class SpawnPos {
                 && world.getBlockState(pos.down()).isSolidBlock(world, pos.down())
                 && world.getFluidState(pos).isEmpty()
                 && world.getFluidState(pos.down()).isEmpty()
-                && (world.getLightLevel(LightType.BLOCK, pos) <= HordesConfig.requiredLightLevel || isNether);
+                && (world.getLightLevel(LightType.BLOCK, pos) <= HordesConfig.REQUIRED_LIGHT_LEVEL || isNether);
     }
 
     // Ищем валидные места для спавна в кластере
@@ -75,7 +73,7 @@ public class SpawnPos {
         final Random rnd = world.getRandom();
         final boolean isNether = world.getRegistryKey() == World.NETHER;
 
-        final double r = Math.sqrt(rnd.nextBetween((int) -minCluster, (int) maxCluster));
+        final double r = Math.sqrt(rnd.nextBetween((int) -HordesConfig.MIN_CLUSTER, (int) HordesConfig.MAX_CLUSTER));
         final double angle = rnd.nextDouble() * 2.0 * Math.PI;
         final int x = (int) (r * Math.cos(angle));
         final int z = (int) (r * Math.sin(angle));
@@ -87,7 +85,7 @@ public class SpawnPos {
             finalPos = SpawnPos.findSurfaceInNether(world, player, tx, basePos.getY(), tz);
         } else {
             final int y = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, tx, tz);
-            if (world.getLightLevel(LightType.BLOCK, basePos) > requiredLightLevel) return null;
+            if (world.getLightLevel(LightType.BLOCK, basePos) > HordesConfig.REQUIRED_LIGHT_LEVEL) return null;
             finalPos = new BlockPos(tx, y, tz);
         }
         return finalPos;
