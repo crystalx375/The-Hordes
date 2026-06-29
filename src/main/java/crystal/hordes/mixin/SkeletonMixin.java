@@ -22,16 +22,15 @@ import static crystal.hordes.config.HordesConfig.enableSkeletonMixin;
 @Mixin(AbstractSkeletonEntity.class)
 public abstract class SkeletonMixin {
     @Unique private static boolean high = false;
-
+    @Unique private static final Random rnd = new Random();
     @Shadow @Final @Mutable private BowAttackGoal<AbstractSkeletonEntity> bowAttackGoal;
 
     @Unique
     private static double random(int range) {
-        Random rnd = new Random();
-        float f = rnd.nextFloat();
+        final float f = rnd.nextFloat();
         if (f > adjustAccuracyChance) {
-            double d = Math.sqrt(range);
-            double r = d / 2;
+            final double d = Math.sqrt(range);
+            final double r = d / 2;
             return r * r;
         }
         return range;
@@ -47,9 +46,9 @@ public abstract class SkeletonMixin {
     @Inject(method = "shootAt", at = @At("HEAD"), cancellable = true)
     private void fix(LivingEntity target, float pullProgress, CallbackInfo ci) {
         if (!(enableSkeletonMixin)) return;
-        AbstractSkeletonEntity skeleton = (AbstractSkeletonEntity) (Object) this;
+        final AbstractSkeletonEntity skeleton = (AbstractSkeletonEntity) (Object) this;
         if (target != null) {
-            double distanceSq = skeleton.squaredDistanceTo(target);
+            final double distanceSq = skeleton.squaredDistanceTo(target);
             if (distanceSq > random(1600)) {
                 ci.cancel();
             }
@@ -64,15 +63,15 @@ public abstract class SkeletonMixin {
             )
     )
     private void adjustAccuracy(PersistentProjectileEntity instance, double x, double y, double z, float power, float uncertainty) {
-        AbstractSkeletonEntity skeleton = (AbstractSkeletonEntity) (Object) this;
+        final AbstractSkeletonEntity skeleton = (AbstractSkeletonEntity) (Object) this;
         if (enableSkeletonMixin && skeleton instanceof IHordes horde && horde.the_Hordes$isHordeZombie()) {
-            Entity target = skeleton.getTarget();
+            final Entity target = skeleton.getTarget();
             if (target != null) {
-                double dX = target.getX() - skeleton.getX();
-                double dZ = target.getZ() - skeleton.getZ();
-                double distance = Math.sqrt(dX * dX + dZ * dZ);
+                final double dX = target.getX() - skeleton.getX();
+                final double dZ = target.getZ() - skeleton.getZ();
+                final double distance = Math.sqrt(dX * dX + dZ * dZ);
 
-                y -= distance * 0.05;
+                y -= distance * 0.06;
                 instance.setVelocity(x, y, z, (float) (1.8 + distance / 50), 3f);
                 return;
             }

@@ -33,9 +33,9 @@ public class ServerMixin {
             nbt.putInt("internalDespawnTimer", internalDespawnTimer);
 
             NbtIo.write(nbt, DATA_FILE.toPath());
-            if (DEBUG) TheHordes.LOGGER.info("[NBT] Saved state: ticks = " + ticks + ", active = " + active + ", waveTimer: " + waveTimer + ", i: " + i + ", delayTimer: " + delayTimer + " and internalDespawnTimer: " + internalDespawnTimer);
+            if (DEBUG) TheHordes.LOGGER.info("[NBT] Saved state: ticks = {}, active = {}, waveTimer = {}, i = {}, delayTimer = {}, and internalDespawnTimer = {}",  ticks,  active, waveTimer, i, delayTimer, internalDespawnTimer);
         } catch (Exception e) {
-            TheHordes.LOGGER.error("Failed to save state: " + e.getMessage());
+            TheHordes.LOGGER.error("Failed to save state");
         }
     }
 }

@@ -34,17 +34,7 @@ public class TickHandler {
             }
 
             if (wave) {
-                boolean canSpawn = false;
-                if (world.getRegistryKey() == World.OVERWORLD && cfg.spawnInOverworld) canSpawn = true;
-                else if (world.getRegistryKey() == World.NETHER && cfg.spawnInNether) canSpawn = true;
-                else if (world.getRegistryKey() == World.END && cfg.spawnInEnd) canSpawn = true;
-
-                if (canSpawn) {
-                    spawnWave(world, mobPool);
-                    if (DEBUG) TheHordes.LOGGER.info("[TickHandler] Spawning wave in dimension: " + world.getRegistryKey().getValue());
-                } else {
-                    TheHordes.LOGGER.warn("Cant spawn, because config spawn in that dimension = " + canSpawn + " (" + world.getRegistryKey().getValue().toString() + ")");
-                }
+                checkSpawn(world, cfg, mobPool);
             }
         }
     }
@@ -52,19 +42,17 @@ public class TickHandler {
     public static void onServerTick(MinecraftServer server) {
         if (server.getTicks() % UPDATE_TIME != 0) return;
         ticks += UPDATE_TIME;
-        if (DEBUG) TheHordes.LOGGER.info("[TickHandler] ticks: " + ticks);
+        if (DEBUG) TheHordes.LOGGER.info("[TickHandler] ticks: {}", ticks);
         if (active) waveTimer += UPDATE_TIME;
-        if (!firstTick && server.getTicks() % 1200 == 0) {
-        }
+        if (server.getTicks() % 1200 == 0) return;
         HordesConfig cfg = HordesConfig.get();
         if (active && (waveTimer >= cfg.waveInterval || i < 1)) {
             wave = true;
             i++;
         }
 
-        cfg = HordesConfig.get();
         for (ServerWorld world : server.getWorlds()) {
-            Map<String, Integer> mobPool;
+            final Map<String, Integer> mobPool;
             if (world.getRegistryKey() == World.NETHER) mobPool = cfg.nether;
             else if (world.getRegistryKey() == World.END) mobPool = cfg.end;
             else mobPool = cfg.overworld;
@@ -84,5 +72,20 @@ public class TickHandler {
         }
         despawnTimer();
         checkForDespawn();
+    }
+
+    private static void checkSpawn(ServerWorld world, HordesConfig cfg, Map<String, Integer> mobPool) {
+        boolean canSpawn = false;
+
+        if (world.getRegistryKey() == World.OVERWORLD && cfg.spawnInOverworld) canSpawn = true;
+        else if (world.getRegistryKey() == World.NETHER && cfg.spawnInNether) canSpawn = true;
+        else if (world.getRegistryKey() == World.END && cfg.spawnInEnd) canSpawn = true;
+
+        if (canSpawn) {
+            spawnWave(world, mobPool);
+            if (DEBUG) TheHordes.LOGGER.info("[TickHandler] Spawning wave in dimension: {}", world.getRegistryKey().getValue());
+        } else {
+            TheHordes.LOGGER.warn("Cant spawn, because config spawn in that dimension = {} ({})", canSpawn, world.getRegistryKey().getValue());
+        }
     }
 }

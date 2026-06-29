@@ -3,12 +3,12 @@ package crystal.hordes.event;
 import crystal.hordes.IHordes;
 import crystal.hordes.config.HordesConfig;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.mob.*;
+import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.registry.RegistryKeys;
@@ -25,11 +25,11 @@ public class HordesVariations {
      * используется в SpawnWave
      */
     public static MobEntity spawnHordes(ServerWorld world, ServerPlayerEntity player, EntityType<?> type, BlockPos finalPos) {
-        MobEntity mob = (MobEntity) type.create(world);
+        final MobEntity mob = (MobEntity) type.create(world);
         if (mob == null) return null;
-        UUID playerUuid = player.getUuid();
-        UUID clusterId = UUID.randomUUID();
-        Random rnd = world.random;
+        final UUID playerUuid = player.getUuid();
+        final UUID clusterId = UUID.randomUUID();
+        final Random rnd = world.random;
         prepareMob(mob, clusterId, playerUuid, finalPos, world, rnd);
         if ((type == EntityType.SKELETON && rnd.nextFloat() < 0.2f) || (type == EntityType.ZOMBIE && rnd.nextFloat() < 0.01f)) {
             ZombieHorseEntity horse = EntityType.ZOMBIE_HORSE.create(world);
@@ -52,32 +52,35 @@ public class HordesVariations {
     private static void giveHordeEquipment(MobEntity mob, Random rnd) {
         // Даем вещи мобам (криво)
         // Я порофлил когда с лошади броня выпала
-        if (mob instanceof GhastEntity) return;
-        if (rnd.nextFloat() < 0.2f) mob.equipStack(EquipmentSlot.HEAD, new ItemStack(rnd.nextFloat() > 0.8 ? Items.IRON_HELMET : Items.LEATHER_HELMET));
-        if (rnd.nextFloat() < 0.3f)  mob.equipStack(EquipmentSlot.CHEST, new ItemStack(rnd.nextFloat() > 0.9 ? Items.IRON_CHESTPLATE : Items.LEATHER_CHESTPLATE));
-        if (rnd.nextFloat() < 0.2f) mob.equipStack(EquipmentSlot.LEGS, new ItemStack(rnd.nextFloat() > 0.7 ? Items.IRON_LEGGINGS : Items.LEATHER_LEGGINGS));
-        if (rnd.nextFloat() < 0.3f)  mob.equipStack(EquipmentSlot.FEET, new ItemStack(rnd.nextFloat() > 0.3 ? Items.IRON_BOOTS : Items.LEATHER_BOOTS));
+        equipArmor(mob, rnd);
         // Чарим лук для скелета
-        if (mob instanceof net.minecraft.entity.mob.AbstractSkeletonEntity) {
-            if (rnd.nextFloat() < 0.2f) {
-                ItemStack bow = new ItemStack(Items.BOW);
-                var registryManager = mob.getWorld().getRegistryManager();
-                var enchantmentRegistry = registryManager.getWrapperOrThrow(RegistryKeys.ENCHANTMENT);
-                var powerEnchantment = enchantmentRegistry.getOrThrow(Enchantments.POWER);
+        if (mob instanceof AbstractSkeletonEntity && rnd.nextFloat() < 0.2f) {
+            final ItemStack bow = new ItemStack(Items.BOW);
+            final var registryManager = mob.getWorld().getRegistryManager();
+            final var enchantmentRegistry = registryManager.getWrapperOrThrow(RegistryKeys.ENCHANTMENT);
+            final var powerEnchantment = enchantmentRegistry.getOrThrow(Enchantments.POWER);
 
-                bow.addEnchantment(powerEnchantment, rnd.nextBetween(1, 5));
-                mob.equipStack(EquipmentSlot.MAINHAND, bow);
-            }
+            bow.addEnchantment(powerEnchantment, rnd.nextBetween(1, 5));
+            mob.equipStack(EquipmentSlot.MAINHAND, bow);
         }
+
         // В ручку даем мечик
         if (mob.getType() == EntityType.ZOMBIE && rnd.nextFloat() < 0.15f) {
             mob.equipStack(EquipmentSlot.MAINHAND, new ItemStack(rnd.nextBoolean() ? Items.STONE_SWORD : Items.IRON_SWORD));
         }
     }
 
+    private static void equipArmor(MobEntity mob, Random rnd) {
+        if (mob instanceof GhastEntity || mob instanceof HorseEntity) return;
+        if (rnd.nextFloat() < 0.2f) mob.equipStack(EquipmentSlot.HEAD, new ItemStack(rnd.nextFloat() > 0.8 ? Items.IRON_HELMET : Items.LEATHER_HELMET));
+        if (rnd.nextFloat() < 0.3f)  mob.equipStack(EquipmentSlot.CHEST, new ItemStack(rnd.nextFloat() > 0.9 ? Items.IRON_CHESTPLATE : Items.LEATHER_CHESTPLATE));
+        if (rnd.nextFloat() < 0.2f) mob.equipStack(EquipmentSlot.LEGS, new ItemStack(rnd.nextFloat() > 0.7 ? Items.IRON_LEGGINGS : Items.LEATHER_LEGGINGS));
+        if (rnd.nextFloat() < 0.3f)  mob.equipStack(EquipmentSlot.FEET, new ItemStack(rnd.nextFloat() > 0.3 ? Items.IRON_BOOTS : Items.LEATHER_BOOTS));
+    }
+
 
     private static void prepareMob(MobEntity mob, UUID clusterId, UUID playerUuid, BlockPos pos, ServerWorld world, Random rnd) {
-        double yOffset = (mob instanceof GhastEntity) ? 2.0 : 0.1;
+        final double yOffset = (mob instanceof GhastEntity) ? 2.0 : 0.1;
         mob.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + yOffset, pos.getZ() + 0.5, rnd.nextFloat() * 360f, 0f);
         ((IHordes) mob).the_Hordes$setHordeZombie(true, clusterId, playerUuid);
         mob.initialize(world, world.getLocalDifficulty(pos), SpawnReason.EVENT, null);

@@ -6,7 +6,6 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 
@@ -39,7 +38,7 @@ public class Despawner {
 
         if (delayTimer > 0) {
             delayTimer -= UPDATE_TIME;
-            if (delayTimer % 1000 == 0 && DEBUG) TheHordes.LOGGER.info("[Despawner] delayTimer: " + delayTimer);
+            if (delayTimer % 1000 == 0 && DEBUG) TheHordes.LOGGER.info("[Despawner] delayTimer: {}", delayTimer);
             return;
         }
 
@@ -49,7 +48,7 @@ public class Despawner {
         if (internalDespawnTimer > 0) return;
         internalDespawnTimer = DESPAWN_INTERVAL_TICKS;
         despawn();
-        TheHordes.LOGGER.info("Despawning: " + zombies.size());
+        TheHordes.LOGGER.info("Despawning: {}", zombies.size());
     }
 
     public static void checkForDespawn() {
@@ -73,7 +72,7 @@ public class Despawner {
             if (!playerNearby) {
                 z.discard();
                 iter.remove();
-                if (DEBUG) TheHordes.LOGGER.info("[Despawner] Player not nearby, deleting hordes, now: " + zombies.size());
+                if (DEBUG) TheHordes.LOGGER.info("[Despawner] Player not nearby, deleting hordes, now: {}", zombies.size());
                 continue;
             }
 

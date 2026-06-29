@@ -26,19 +26,19 @@ public class SpawnWave {
      */
     public static void spawnWave(ServerWorld world, Map<String, Integer> mobPool) {
 
-        int playerCount = world.getServer().getPlayerManager().getPlayerList().size();
+        final int playerCount = world.getServer().getPlayerManager().getPlayerList().size();
         if (playerCount == 0) return;
 
-        int currentHordeCount = HordesConfig.getHordeZombies().size();
+        final int currentHordeCount = HordesConfig.getHordeZombies().size();
+        final Random rnd = world.getRandom();
 
-        HordesConfig cfg = get();
+        final HordesConfig cfg = get();
         HordesConfig.getHordeZombies().removeIf(mob -> mob == null || !mob.isAlive() || mob.isRemoved());
-        Random rnd = world.getRandom();
 
-        int globalLimit = cfg.hordesLimitPerPlayer * playerCount;
+        final int globalLimit = cfg.hordesLimitPerPlayer * playerCount;
 
         if (currentHordeCount >= globalLimit) {
-            TheHordes.LOGGER.info("Spawn canceled: " + currentHordeCount + " >= " + globalLimit);
+            TheHordes.LOGGER.info("Spawn canceled: {} >= {}", currentHordeCount, globalLimit);
             return;
         }
 
@@ -47,32 +47,30 @@ public class SpawnWave {
         // + чуть проверок
         for (ServerPlayerEntity player : world.getPlayers()) {
             if (player.getWorld() != world) continue;
-            EntityType<?> type;
 
             int toSpawn = cfg.zombiesPerWave;
             int attempts = 0;
 
-            BlockPos basePos = SpawnPos.findSpawnAroundPlayer(world, player, null, rnd);
+            final BlockPos basePos = SpawnPos.findSpawnAroundPlayer(world, player, null, rnd);
             if (basePos == null) continue;
-
-            while (toSpawn > 0 && attempts < toSpawn * 10) {
-                // Здесь мы находим finalPos для каждого моба
-                type = getRandomMobByWeight(mobPool, rnd);
-                attempts++;
-
-                BlockPos finalPos = spawnCluster(world, basePos, player);
-                if (finalPos == null) continue;
-
-                if (!SpawnPos.isValidSpawn(world, type, finalPos)) continue;
-
-                // Даем случайные атрибуты мобу
-                MobEntity mob = spawnHordes(world, player, type, finalPos);
-                if (rnd.nextFloat() < 0.5) world.playSound(null, finalPos, SoundEvents.ENTITY_ZOMBIE_AMBIENT, SoundCategory.AMBIENT, 1f, 1f);
-                toSpawn--;
-
-                if (DEBUG) TheHordes.LOGGER.info("[SpawnWave] Spawning: " + mob);
-            }
+            spawnMobs(world, basePos, player, mobPool, toSpawn, attempts, rnd);
             player.getWorld().playSound(null, basePos, SoundEvents.AMBIENT_NETHER_WASTES_MOOD.value(), SoundCategory.AMBIENT, 5f, 1f);
+        }
+    }
+
+    private static void spawnMobs(ServerWorld world, BlockPos basePos, ServerPlayerEntity player, Map<String, Integer> mobPool, int toSpawn, int attempts, Random rnd) {
+        while (toSpawn > 0 && attempts < toSpawn * 10) {
+            final EntityType<?> type = getRandomMobByWeight(mobPool, rnd);
+            attempts++;
+
+            final BlockPos finalPos = spawnCluster(world, basePos, player);
+            if (finalPos == null || (!SpawnPos.isValidSpawn(world, type, finalPos))) continue;
+
+            final MobEntity mob = spawnHordes(world, player, type, finalPos);
+            if (rnd.nextFloat() < 0.5) world.playSound(null, finalPos, SoundEvents.ENTITY_ZOMBIE_AMBIENT, SoundCategory.AMBIENT, 1f, 1f);
+            toSpawn--;
+
+            if (DEBUG) TheHordes.LOGGER.info("[SpawnWave] Spawning: {}", mob);
         }
     }
 

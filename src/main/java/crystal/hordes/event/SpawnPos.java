@@ -7,6 +7,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.LightType;
@@ -45,11 +46,9 @@ public class SpawnPos {
                 finalPos = new BlockPos(targetPos.getX(), surface, targetPos.getZ());
             }
 
-            if (finalPos != null && isValidSpawn(world, checkType, finalPos)) {
-                if (areaCheck(world, finalPos)) {
-                    TheHordes.LOGGER.info("Spawn: " + finalPos + " For player: " + player.getName().getString());
-                    return finalPos;
-                }
+            if (finalPos != null && isValidSpawn(world, checkType, finalPos) && areaCheck(world, finalPos)) {
+                TheHordes.LOGGER.info("Spawn: {} For player: {}", finalPos, player.getName().getString());
+                return finalPos;
             }
         }
         TheHordes.LOGGER.warn("Spawn is not valid");
@@ -59,10 +58,10 @@ public class SpawnPos {
      * Проверки на место спавна
      */
     public static boolean isValidSpawn(ServerWorld world, EntityType<?> type, BlockPos pos) {
-        Entity temp = type.create(world);
+        final Entity temp = type.create(world);
         if (temp == null) return false;
-        boolean isNether = world.getRegistryKey() == World.NETHER;
-        net.minecraft.util.math.Box box = temp.getType().getDimensions().getBoxAt(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);
+        final boolean isNether = world.getRegistryKey() == World.NETHER;
+        final Box box = temp.getType().getDimensions().getBoxAt(pos.getX() + 0.5D, pos.getY() + 1D, pos.getZ() + 0.5D);
         return world.isSpaceEmpty(temp, box)
                 && !world.containsFluid(box)
                 && world.getBlockState(pos.down()).isSolidBlock(world, pos.down())
@@ -73,21 +72,21 @@ public class SpawnPos {
 
     // Ищем валидные места для спавна в кластере
     public static BlockPos spawnCluster(ServerWorld world, BlockPos basePos, ServerPlayerEntity player) {
-        Random rnd = world.getRandom();
-        boolean isNether = world.getRegistryKey() == World.NETHER;
+        final Random rnd = world.getRandom();
+        final boolean isNether = world.getRegistryKey() == World.NETHER;
 
-        double r = Math.sqrt(rnd.nextBetween((int) -minCluster, (int) maxCluster));
-        double angle = rnd.nextDouble() * 2.0 * Math.PI;
-        int x = (int) (r * Math.cos(angle));
-        int z = (int) (r * Math.sin(angle));
-        int tx = basePos.getX() + x;
-        int tz = basePos.getZ() + z;
-        BlockPos finalPos;
+        final double r = Math.sqrt(rnd.nextBetween((int) -minCluster, (int) maxCluster));
+        final double angle = rnd.nextDouble() * 2.0 * Math.PI;
+        final int x = (int) (r * Math.cos(angle));
+        final int z = (int) (r * Math.sin(angle));
+        final int tx = basePos.getX() + x;
+        final int tz = basePos.getZ() + z;
+        final BlockPos finalPos;
 
         if (isNether) {
             finalPos = SpawnPos.findSurfaceInNether(world, player, tx, basePos.getY(), tz);
         } else {
-            int y = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, tx, tz);
+            final int y = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, tx, tz);
             if (world.getLightLevel(LightType.BLOCK, basePos) > requiredLightLevel) return null;
             finalPos = new BlockPos(tx, y, tz);
         }
@@ -120,6 +119,7 @@ public class SpawnPos {
                 }
             }
         }
+        if (total == 0) return false;
         return (double) valid / total > 0.5;
     }
 }

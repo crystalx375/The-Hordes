@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021 magistermaks and ?crystalx0375?
+package crystal.hordes.util;/*
+ * Copyright (c) 2021 magistermaks
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -18,21 +18,25 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
+ * Edited some code - crystalx0375
  */
-package crystal.hordes.util;
 
+import com.google.gson.JsonSyntaxException;
+import crystal.hordes.TheHordes;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 
 public class SimpleConfig {
 
@@ -44,7 +48,7 @@ public class SimpleConfig {
     public interface DefaultConfig {
         String get( String namespace );
 
-        static String empty( String namespace ) {
+        static String empty(String namespace) {
             return "";
         }
     }
@@ -56,7 +60,7 @@ public class SimpleConfig {
         private DefaultConfig provider;
         private int version;
 
-        private ConfigRequest(File file, String filename ) {
+        private ConfigRequest(File file, String filename) {
             this.file = file;
             this.filename = filename;
             this.provider = DefaultConfig::empty;
@@ -102,7 +106,7 @@ public class SimpleConfig {
      * @param filename - name of the config file
      * @return new config request object
      */
-    public static ConfigRequest of( String filename ) {
+    public static ConfigRequest of(String filename) {
         Path path = FabricLoader.getInstance().getConfigDir();
         return new ConfigRequest( path.resolve( filename + ".properties" ).toFile(), filename );
     }
@@ -111,40 +115,49 @@ public class SimpleConfig {
      * @author Crystal
      * Added folder with config
      */
-    public static ConfigRequest of( String folder, String filename ) {
+    public static ConfigRequest of(String folder, String filename) {
         Path path = FabricLoader.getInstance().getConfigDir().resolve(folder);
         return new ConfigRequest( path.resolve( filename + ".properties" ).toFile(), filename );
     }
 
     private void createConfig() throws IOException {
-
         // try creating missing files
-        request.file.getParentFile().mkdirs();
-        Files.createFile( request.file.toPath() );
+        Path parent = request.file.toPath().getParent();
+        if (parent != null && !Files.exists(parent)) {
+            Files.createDirectories(parent);
+        }
+        if (!Files.exists(request.file.toPath())) {
+            Files.createFile(request.file.toPath());
+        }
 
         // write default config data
-        PrintWriter writer = new PrintWriter(request.file, StandardCharsets.UTF_8);
-        writer.println("# <--- Dont change version below --->");
-        writer.println("version = " + request.version);
-        writer.write( request.getConfig() );
-        writer.close();
-
-    }
-
-    private void loadConfig() throws IOException {
-        Scanner reader = new Scanner( request.file );
-        for( int line = 1; reader.hasNextLine(); line ++ ) {
-            parseConfigEntry( reader.nextLine(), line );
+        try (PrintWriter writer = new PrintWriter(request.file, StandardCharsets.UTF_8)) {
+            writer.println("# <--- Dont change version below --->");
+            writer.println("version = " + request.version);
+            writer.write( request.getConfig() );
+        } catch (IOException e) {
+            LOGGER.error("{} failed to generate!", request.file, e);
+            broken = true;
         }
     }
 
-    private void parseConfigEntry( String entry, int line ) {
+    private void loadConfig() {
+        try (Scanner reader = new Scanner(request.file)){
+            for( int line = 1; reader.hasNextLine(); line ++ ) {
+                parseConfigEntry( reader.nextLine(), line );
+            }
+        } catch (FileNotFoundException e) {
+            LOGGER.error("{} Failed to load config", request.file, e);
+        }
+    }
+
+    private void parseConfigEntry(String entry, int line) {
         if( !entry.isEmpty() && !entry.startsWith( "#" ) ) {
             String[] parts = entry.split("=", 2);
             if( parts.length == 2 ) {
                 config.put( parts[0].trim(), parts[1].trim() );
             } else {
-                throw new RuntimeException("Syntax error in config file on line " + line + "!");
+                throw new JsonSyntaxException("Syntax error in config file on line " + line + "!");
             }
         }
     }
@@ -154,17 +167,17 @@ public class SimpleConfig {
         String identifier = "Config '" + request.filename + "'";
 
         if (request.file.exists() && isOutdated() ) {
-            LOGGER.warn( identifier + " is outdated, backing up and regenerating..." );
-            Remove();
+            LOGGER.warn("{} is outdated, backing up and regenerating...", identifier);
+            save();
         }
 
-        if(!request.file.exists() ) {
-            LOGGER.info( identifier + " is missing, generating default one..." );
+        if(!request.file.exists()) {
+            LOGGER.info("{} is missing, generating default one...", identifier);
 
             try {
                 createConfig();
             } catch (IOException e) {
-                LOGGER.error( identifier + " failed to generate!" );
+                LOGGER.error("{} failed to generate!", identifier);
                 LOGGER.trace( e );
                 broken = true;
             }
@@ -174,7 +187,7 @@ public class SimpleConfig {
             try {
                 loadConfig();
             } catch (Exception e) {
-                LOGGER.error( identifier + " failed to load!" );
+                LOGGER.error("{} failed to load!", identifier);
                 LOGGER.trace( e );
                 broken = true;
             }
@@ -189,9 +202,8 @@ public class SimpleConfig {
      * @return  value corresponding to the given key
      * @see     SimpleConfig#getOrDefault
      */
-    @Deprecated
-    public String get( String key ) {
-        return config.get( key );
+    public String get(String key) {
+        return config.get(key);
     }
 
     /**
@@ -200,7 +212,7 @@ public class SimpleConfig {
      *
      * @return  value corresponding to the given key, or the default value
      */
-    public String getOrDefault( String key, String def ) {
+    public String getOrDefault(String key, String def) {
         String val = get(key);
         return val == null ? def : val;
     }
@@ -211,7 +223,7 @@ public class SimpleConfig {
      *
      * @return  value corresponding to the given key, or the default value
      */
-    public int getOrDefault( String key, int def ) {
+    public int getOrDefault(String key, int def) {
         try {
             return Integer.parseInt( get(key) );
         } catch (Exception e) {
@@ -225,7 +237,7 @@ public class SimpleConfig {
      *
      * @return  value corresponding to the given key, or the default value
      */
-    public boolean getOrDefault( String key, boolean def ) {
+    public boolean getOrDefault(String key, boolean def) {
         String val = get(key);
         if( val != null ) {
             return val.equalsIgnoreCase("true");
@@ -240,11 +252,89 @@ public class SimpleConfig {
      *
      * @return  value corresponding to the given key, or the default value
      */
-    public double getOrDefault( String key, double def ) {
+    public float getOrDefault(String key, float def) {
         try {
-            return Double.parseDouble( get(key) );
+            return Float.parseFloat(get(key));
         } catch (Exception e) {
             return def;
+        }
+    }
+
+    /**
+     * Returns double value from config corresponding to the given
+     * key, or the default string if the key is missing or invalid.
+     *
+     * @return  value corresponding to the given key, or the default value
+     */
+    public double getOrDefault(String key, double def) {
+        try {
+            return Double.parseDouble(get(key));
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    /**
+     * @author Crystal
+     * Recreate file and create .old backup
+     */
+    public void save() {
+        Path source = request.file.toPath();
+        Path backup = source.resolveSibling(source.getFileName() + ".old");
+        delete(source);
+        backup(source, backup);
+    }
+
+    /**
+     * @author Crystal
+     * Checking version
+     * @return when is outdate
+     */
+    public boolean isOutdated() {
+        try (Scanner reader = new Scanner(request.file)) {
+            while (reader.hasNextLine()) {
+                String s = reader.nextLine();
+                if (s.isEmpty() || (s.startsWith("#") && !s.contains("version"))) continue;
+                if (s.startsWith("version = ")) {
+                    int v = Integer.parseInt(s.split("=")[1].trim());
+                    return v < request.version;
+                }
+            }
+        } catch (Exception e) {
+            return true;
+        }
+        return true;
+    }
+
+    /**
+     * @author Crystal
+     * Created for dynamical config
+     * E.g. Mod Menu + Cloth Config
+     * @param path path of file
+     * @param changes changes map with key and val
+     */
+    public static void writer(Path path, Map<String, Object> changes) {
+        try {
+            if (!Files.exists(path)) return;
+
+            List<String> l = Files.readAllLines(path);
+            List<String> newLines = new ArrayList<>();
+
+            for (String line : l) {
+                String trimmed = line.trim();
+                if (!trimmed.startsWith("#") && trimmed.contains("=")) {
+                    String key = trimmed.split("=")[0].trim();
+                    if (changes.containsKey(key)) {
+                        newLines.add(key + " = " + changes.get(key));
+                        continue;
+                    }
+                }
+                newLines.add(line);
+            }
+            Files.write(path, newLines);
+            TheHordes.LOGGER.info("Saved config");
+        } catch (IOException e) {
+            TheHordes.LOGGER.error("Failed to save config - path: {}", path);
         }
     }
 
@@ -260,42 +350,36 @@ public class SimpleConfig {
     }
 
     /**
-     * deletes the config file from the filesystem
-     *
-     * @return true if the operation was successful
+     * @author Crystal
+     * If flag broken is true -> trying to delete file
+     * @param path File path
      */
-    public boolean delete() {
-        LOGGER.warn( "Config '" + request.filename + "' was removed from existence! Restart the game to regenerate it." );
-        return request.file.delete();
+    public void deleteBrokenFile(Path path) {
+        if (isBroken()) {
+            try {
+                Files.delete(path);
+                LOGGER.info("Deleted broken file {}", path);
+                broken = false;
+            } catch (IOException e) {
+                LOGGER.error("Failed to delete broken file {}", path, e);
+                broken = true;
+            }
+        }
     }
 
-    /**
-     * @author Crystal
-     * Recreate File and create outdated file
-     */
-    private void Remove() {
-        File backup = new File(request.file.getPath() + ".old");
-        if (backup.exists()) backup.delete();
-        request.file.renameTo(backup);
-    }
-    /**
-     * @author Crystal
-     * Checking version
-     * @return if true is outdate
-     */
-    private boolean isOutdated() {
-        try (Scanner reader = new Scanner(request.file)) {
-            while (reader.hasNextLine()) {
-                String s = reader.nextLine();
-                if (s.isEmpty() || (s.startsWith("#") && !s.contains("version"))) continue;
-                if (s.startsWith("version = ")) {
-                    int v = Integer.parseInt(s.split("=")[1].trim());
-                    return v < request.version;
-                }
-            }
-        } catch (Exception e) {
-            return true;
+    private void delete(Path path) {
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            LOGGER.error("Failed to delete file");
         }
-        return true;
+    }
+    private void backup(Path source, Path backup) {
+        try {
+            Files.move(source, backup, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            LOGGER.error("Failed to create backup for {}", source, e);
+            broken = true;
+        }
     }
 }
