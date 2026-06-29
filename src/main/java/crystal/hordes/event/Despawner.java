@@ -13,14 +13,12 @@ import java.util.Iterator;
 import java.util.Set;
 
 import static crystal.hordes.config.HordesConfig.*;
-import static crystal.hordes.config.HordesConfig.DEBUG;
-import static crystal.hordes.config.HordesConfig.DESPAWN_INTERVAL_TICKS;
-import static crystal.hordes.config.HordesConfig.UPDATE_TIME;
 
 
 public class Despawner {
     public static int delayTimer;
     public static int internalDespawnTimer;
+
     private static final Set<MobEntity> zombies = HordesConfig.getHordeZombies();
 
     /**
@@ -34,7 +32,7 @@ public class Despawner {
 
     public static void despawnTimer() {
         if (delayTimer <= -2) return;
-        if (delayTimer == -1) delayTimer = delayTicks;
+        if (delayTimer == -1) delayTimer = DELAY_TICKS;
 
         if (delayTimer > 0) {
             delayTimer -= UPDATE_TIME;
@@ -58,7 +56,7 @@ public class Despawner {
     private static void despawn() {
         Iterator<MobEntity> iter = zombies.iterator();
         int count = 0;
-        int limit = (int) (HordesConfig.PER_DESPAWN + zombies.size() * HordesConfig.FACTOR_SIZE);
+        int limit = (int) (PER_DESPAWN + zombies.size() * FACTOR_SIZE);
 
         while (iter.hasNext() && count < limit) {
             MobEntity z = iter.next();

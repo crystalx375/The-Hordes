@@ -12,78 +12,99 @@ import static crystal.hordes.event.Despawner.checkForDespawn;
 import static crystal.hordes.event.Despawner.despawnTimer;
 import static crystal.hordes.event.HordesManager.endHorde;
 import static crystal.hordes.event.HordesManager.startHorde;
-import static crystal.hordes.config.HordesConfig.*;
 import static crystal.hordes.event.SpawnWave.spawnWave;
 import static crystal.hordes.util.Nbt.loadState;
 
 public class TickHandler {
-    static boolean firstTick = true;
-    static boolean wave = false;
+    private static boolean firstTick = true;
+    private static boolean wave = false;
 
     private static void worldTick(ServerWorld world, Map<String, Integer> mobPool) {
-        HordesConfig cfg = HordesConfig.get();
+        boolean active = HordesConfig.isActive();
+        int ticks = HordesConfig.getTicks();
+
         if (world.getPlayers().isEmpty()) return;
 
-        if (!active && ticks >= cfg.daysBetweenHordes * 24000) {
-            boolean nightCheck = (world.isNight() || !HordesConfig.required_night);
+        if (!active && ticks >= HordesConfig.DAYS_BETWEEN_HORDES * 24000) {
+            boolean nightCheck = (world.isNight() || !HordesConfig.REQUIRED_NIGHT);
             if (nightCheck) startHorde(world);
-        } else {
-            if (ticks > cfg.hordeDuration - cfg.waveInterval + UPDATE_TIME * 2) {
+        } else if (active) {
+            if (ticks > HordesConfig.HORDE_DURATION - HordesConfig.WAVE_INTERVAL + HordesConfig.UPDATE_TIME * 2) {
                 endHorde(world);
                 return;
             }
 
             if (wave) {
-                checkSpawn(world, cfg, mobPool);
+                checkSpawn(world, mobPool);
             }
         }
     }
 
     public static void onServerTick(MinecraftServer server) {
-        if (server.getTicks() % UPDATE_TIME != 0) return;
-        ticks += UPDATE_TIME;
-        if (DEBUG) TheHordes.LOGGER.info("[TickHandler] ticks: {}", ticks);
-        if (active) waveTimer += UPDATE_TIME;
-        if (server.getTicks() % 1200 == 0) return;
-        HordesConfig cfg = HordesConfig.get();
-        if (active && (waveTimer >= cfg.waveInterval || i < 1)) {
-            wave = true;
-            i++;
+        if (server.getTicks() % HordesConfig.UPDATE_TIME != 0) return;
+
+        // Сначала обрабатываем загрузку NBT на самом первом тике
+        if (firstTick) {
+            loadState();
+            firstTick = false;
         }
+
+        // Берем актуальные изменяемые данные
+        final int currentTicks = HordesConfig.getTicks() + HordesConfig.UPDATE_TIME;
+        HordesConfig.setTicks(currentTicks);
+
+        final boolean active = HordesConfig.isActive();
+        final int i = HordesConfig.getI();
+        int waveTimer = HordesConfig.getWaveTimer();
+
+        if (HordesConfig.DEBUG) {
+            TheHordes.LOGGER.info("[TickHandler] ticks: {}, active: {}, waveTimer: {}, i: {}",
+                    currentTicks, active, waveTimer, i);
+        }
+
+        if (active) {
+            waveTimer += HordesConfig.UPDATE_TIME;
+            HordesConfig.setWaveTimer(waveTimer);
+        }
+
+        if (server.getTicks() % 1200 != 0 && active && (waveTimer >= HordesConfig.WAVE_INTERVAL || i < 1)) {
+            wave = true;
+            HordesConfig.setI(i + 1);
+        }
+
 
         for (ServerWorld world : server.getWorlds()) {
             final Map<String, Integer> mobPool;
-            if (world.getRegistryKey() == World.NETHER) mobPool = cfg.nether;
-            else if (world.getRegistryKey() == World.END) mobPool = cfg.end;
-            else mobPool = cfg.overworld;
+            if (world.getRegistryKey() == World.NETHER) mobPool = HordesConfig.nether;
+            else if (world.getRegistryKey() == World.END) mobPool = HordesConfig.end;
+            else mobPool = HordesConfig.overworld;
 
             worldTick(world, mobPool);
         }
 
         if (wave) {
-            waveTimer = 0;
+            HordesConfig.setWaveTimer(0);
             wave = false;
         }
 
         if (server.getCurrentPlayerCount() == 0) return;
-        if (firstTick) {
-            loadState();
-            firstTick = false;
-        }
+
         despawnTimer();
         checkForDespawn();
     }
 
-    private static void checkSpawn(ServerWorld world, HordesConfig cfg, Map<String, Integer> mobPool) {
+    private static void checkSpawn(ServerWorld world, Map<String, Integer> mobPool) {
         boolean canSpawn = false;
 
-        if (world.getRegistryKey() == World.OVERWORLD && cfg.spawnInOverworld) canSpawn = true;
-        else if (world.getRegistryKey() == World.NETHER && cfg.spawnInNether) canSpawn = true;
-        else if (world.getRegistryKey() == World.END && cfg.spawnInEnd) canSpawn = true;
+        if (world.getRegistryKey() == World.OVERWORLD && HordesConfig.SPAWN_IN_OVERWORLD) canSpawn = true;
+        else if (world.getRegistryKey() == World.NETHER && HordesConfig.SPAWN_IN_NETHER) canSpawn = true;
+        else if (world.getRegistryKey() == World.END && HordesConfig.SPAWN_IN_END) canSpawn = true;
 
         if (canSpawn) {
             spawnWave(world, mobPool);
-            if (DEBUG) TheHordes.LOGGER.info("[TickHandler] Spawning wave in dimension: {}", world.getRegistryKey().getValue());
+            if (HordesConfig.DEBUG) {
+                TheHordes.LOGGER.info("[TickHandler] Spawning wave in dimension: {}", world.getRegistryKey().getValue());
+            }
         } else {
             TheHordes.LOGGER.warn("Cant spawn, because config spawn in that dimension = {} ({})", canSpawn, world.getRegistryKey().getValue());
         }
