@@ -5,19 +5,20 @@ import crystal.hordes.config.HordesConfig;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.Iterator;
 import java.util.Set;
 
 import static crystal.hordes.config.HordesConfig.*;
-import static crystal.hordes.config.HordesConfig.DEBUG;
-import static crystal.hordes.config.HordesConfig.DESPAWN_INTERVAL_TICKS;
-import static crystal.hordes.config.HordesConfig.UPDATE_TIME;
 
 
 public class Despawner {
     public static int delayTimer;
     public static int internalDespawnTimer;
+
     private static final Set<MobEntity> zombies = HordesConfig.getHordeZombies();
 
     /**
@@ -31,11 +32,11 @@ public class Despawner {
 
     public static void despawnTimer() {
         if (delayTimer <= -2) return;
-        if (delayTimer == -1) delayTimer = delayTicks;
+        if (delayTimer == -1) delayTimer = DELAY_TICKS;
 
         if (delayTimer > 0) {
             delayTimer -= UPDATE_TIME;
-            if (delayTimer % 1000 == 0 && DEBUG) TheHordes.LOGGER.info("[Despawner] delayTimer: " + delayTimer);
+            if (delayTimer % 1000 == 0 && DEBUG) TheHordes.LOGGER.info("[Despawner] delayTimer: {}", delayTimer);
             return;
         }
 
@@ -45,7 +46,7 @@ public class Despawner {
         if (internalDespawnTimer > 0) return;
         internalDespawnTimer = DESPAWN_INTERVAL_TICKS;
         despawn();
-        TheHordes.LOGGER.info("Despawning: " + zombies.size());
+        TheHordes.LOGGER.info("Despawning: {}", zombies.size());
     }
 
     public static void checkForDespawn() {
@@ -55,7 +56,7 @@ public class Despawner {
     private static void despawn() {
         Iterator<MobEntity> iter = zombies.iterator();
         int count = 0;
-        int limit = (int) (HordesConfig.PER_DESPAWN + zombies.size() * HordesConfig.FACTOR_SIZE);
+        int limit = (int) (PER_DESPAWN + zombies.size() * FACTOR_SIZE);
 
         while (iter.hasNext() && count < limit) {
             MobEntity z = iter.next();
@@ -69,11 +70,12 @@ public class Despawner {
             if (!playerNearby) {
                 z.discard();
                 iter.remove();
-                if (DEBUG) TheHordes.LOGGER.info("[Despawner] Player not nearby, deleting hordes, now: " + zombies.size());
+                if (DEBUG) TheHordes.LOGGER.info("[Despawner] Player not nearby, deleting hordes, now: {}", zombies.size());
                 continue;
             }
 
             if (z.getWorld() instanceof ServerWorld server) {
+                z.getWorld().playSound(null, BlockPos.ofFloored(z.getPos()), SoundEvents.ENTITY_ZOMBIE_VILLAGER_CURE, SoundCategory.AMBIENT, 0.3f, 1f);
                 server.spawnParticles(ParticleTypes.SMOKE, z.getX(), z.getY() + 1, z.getZ(), 10, 0.2, 0.5, 0.2, 0.05);
                 z.discard();
                 iter.remove();

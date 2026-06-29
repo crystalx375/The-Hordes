@@ -2,60 +2,80 @@ package crystal.hordes.mixin;
 
 import crystal.hordes.IHordes;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.goal.BowAttackGoal;
 import net.minecraft.entity.mob.AbstractSkeletonEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
+import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static crystal.hordes.config.HordesConfig.adjustAccuracyChance;
-import static crystal.hordes.config.HordesConfig.enableSkeletonMixin;
+import java.util.Random;
+
+import static crystal.hordes.config.HordesConfig.ADJUST_ACCURACY_CHANCE;
+import static crystal.hordes.config.HordesConfig.ENABLE_SKELETON_MIXIN;
 
 @Mixin(AbstractSkeletonEntity.class)
 public abstract class SkeletonMixin {
     @Unique private static boolean high = false;
+    @Unique private static final Random rnd = new Random();
+    @Shadow @Final @Mutable private BowAttackGoal<AbstractSkeletonEntity> bowAttackGoal;
 
-    @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
-    private void shootCheck(LivingEntity target, float pullProgress, CallbackInfo ci) {
-        AbstractSkeletonEntity skeleton = (AbstractSkeletonEntity) (Object) this;
-        double distance = skeleton.squaredDistanceTo(target);
-        if (skeleton instanceof IHordes horde && horde.the_Hordes$isHordeZombie()) {
-            float c = skeleton.getRandom().nextFloat();
-            int limit = 20 * 20;
-            if (c < adjustAccuracyChance) {
-                limit = 45 * 45;
-            }
-            if (distance > limit) {
+    @Unique
+    private static double random(int range) {
+        final float f = rnd.nextFloat();
+        if (f > ADJUST_ACCURACY_CHANCE) {
+            final double d = Math.sqrt(range);
+            final double r = d / 2;
+            return r * r;
+        }
+        return range;
+    }
+
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void initCustomGoal(EntityType entityType, World world, CallbackInfo ci) {
+        if (ENABLE_SKELETON_MIXIN) {
+            this.bowAttackGoal = new BowAttackGoal<>((AbstractSkeletonEntity) (Object) this, 1.0D, 20, 40F);
+        }
+    }
+
+    @Inject(method = "shootAt", at = @At("HEAD"), cancellable = true)
+    private void fix(LivingEntity target, float pullProgress, CallbackInfo ci) {
+        if (!(ENABLE_SKELETON_MIXIN)) return;
+        final AbstractSkeletonEntity skeleton = (AbstractSkeletonEntity) (Object) this;
+        if (target != null) {
+            final double distanceSq = skeleton.squaredDistanceTo(target);
+            if (distanceSq > random(1600)) {
                 ci.cancel();
             }
         }
     }
 
     @Redirect(
-            method = "attack",
+            method = "shootAt",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/entity/projectile/PersistentProjectileEntity;setVelocity(DDDFF)V"
             )
     )
-    private void adjustAccuracy(PersistentProjectileEntity arrow, double x, double y, double z, float speed, float divergence) {
-        AbstractSkeletonEntity skeleton = (AbstractSkeletonEntity) (Object) this;
-        if (enableSkeletonMixin && skeleton instanceof IHordes horde && horde.the_Hordes$isHordeZombie()) {
-            Entity target = skeleton.getTarget();
+    private void adjustAccuracy(PersistentProjectileEntity instance, double x, double y, double z, float power, float uncertainty) {
+        final AbstractSkeletonEntity skeleton = (AbstractSkeletonEntity) (Object) this;
+        if (ENABLE_SKELETON_MIXIN && skeleton instanceof IHordes horde && horde.the_Hordes$isHordeZombie()) {
+            final Entity target = skeleton.getTarget();
             if (target != null) {
-                double dX = target.getX() - skeleton.getX();
-                double dZ = target.getZ() - skeleton.getZ();
-                double distance = Math.sqrt(dX * dX + dZ * dZ);
+                final double dX = target.getX() - skeleton.getX();
+                final double dZ = target.getZ() - skeleton.getZ();
+                final double distance = Math.sqrt(dX * dX + dZ * dZ);
 
-                y -= distance * 0.05;
-                arrow.setVelocity(x, y, z, (float) (2 + distance / 50), 2f);
+                y -= distance * 0.06;
+                instance.setVelocity(x, y, z, (float) (1.8 + distance / 50), 3f);
                 return;
             }
         }
-        arrow.setVelocity(x, y, z, speed, divergence);
+        instance.setVelocity(x, y, z, power, uncertainty);
     }
 }

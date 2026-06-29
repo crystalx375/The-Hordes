@@ -25,16 +25,15 @@ import static crystal.hordes.config.HordesConfig.getHordeZombies;
 
 @Mixin(MobEntity.class)
 public abstract class MobEntityMixin extends LivingEntity implements IHordes {
-    /**
-     * Я не хочу делать это говно нахуй
-     * Я ПОТРАТИЛ ДОХУЯ ВРЕМЕНИ НА ФИКС АААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААА
-     */
+
     @Shadow @Final protected GoalSelector goalSelector;
     @Shadow @Final protected GoalSelector targetSelector;
 
     @Unique private boolean isHordeMob = false;
     @Unique private UUID hordeId = null;
+    @Unique private String hordeIdS = "HordeId";
     @Unique private UUID targetPlayerUuid = null;
+    @Unique private String TargetPlayerUuidS = "TargetPlayerUuid";
 
     protected MobEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
@@ -50,10 +49,8 @@ public abstract class MobEntityMixin extends LivingEntity implements IHordes {
         }
     }
 
-    @Override
-    public boolean the_Hordes$isHordeZombie() { return this.isHordeMob; }
-    @Override
-    public UUID the_Hordes$getTargetPlayerUuid() { return this.targetPlayerUuid; }
+    @Override public boolean the_Hordes$isHordeZombie() { return this.isHordeMob; }
+    @Override public UUID the_Hordes$getTargetPlayerUuid() { return this.targetPlayerUuid; }
 
     @Unique
     private boolean canTargetPlayer(PlayerEntity player) {
@@ -62,54 +59,55 @@ public abstract class MobEntityMixin extends LivingEntity implements IHordes {
     // Меняю, так как через revenge goal не получилось
     @Inject(method = "setTarget", at = @At("HEAD"), cancellable = true)
     private void onSetTarget(LivingEntity target, CallbackInfo ci) {
-        if (this.isHordeMob && target instanceof IHordes accessor) {
-            if (accessor.the_Hordes$isHordeZombie()) {
-                UUID playerUuid = accessor.the_Hordes$getTargetPlayerUuid();
-                if (HordesConfig.onlyTargetPlayers) {
+        if (this.isHordeMob) {
+            if (target instanceof IHordes accessor && accessor.the_Hordes$isHordeZombie()) {
+                final UUID playerUuid = accessor.the_Hordes$getTargetPlayerUuid();
+                if (playerUuid != null && playerUuid.equals(this.targetPlayerUuid)) {
                     ci.cancel();
-                } else {
-                    if (playerUuid != null && playerUuid.equals(this.targetPlayerUuid)) {
-                        ci.cancel();
-                    }
+                    return;
                 }
+            }
+
+            if (HordesConfig.get().ONLY_TARGET_PLAYERS && !(target instanceof PlayerEntity)) {
+                ci.cancel();
             }
         }
     }
 
     @Unique
     private void applyHordeLogic() {
-        MobEntity host = (MobEntity)(Object)this;
+        final MobEntity host = (MobEntity)(Object)this;
+        final var rangeAttr = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
 
-        var rangeAttr = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
         if (rangeAttr != null) {
             rangeAttr.setBaseValue(64.0);
         }
+
         this.goalSelector.getGoals().removeIf(goal ->
                 goal.getGoal() instanceof StepAndDestroyBlockGoal ||
                         goal.getGoal() instanceof MoveThroughVillageGoal ||
                         goal.getGoal() instanceof AvoidSunlightGoal
         );
-        this.goalSelector.getGoals().removeIf(goal -> goal.getGoal() instanceof RevengeGoal);
-        this.goalSelector.getGoals().removeIf(goal -> goal.getGoal() instanceof ActiveTargetGoal);
+        this.targetSelector.getGoals().removeIf(goal ->
+                goal.getGoal() instanceof RevengeGoal ||
+                        goal.getGoal() instanceof ActiveTargetGoal
+        );
 
         this.targetSelector.add(1, new ActiveTargetGoal<>(host, PlayerEntity.class, 10, false, true, null));
+        setTargetSelector(host);
+    }
 
-        if (!HordesConfig.onlyTargetPlayers) {
+    @Unique private void setTargetSelector(MobEntity host) {
+        if (!HordesConfig.get().ONLY_TARGET_PLAYERS) {
             this.targetSelector.add(2, new ActiveTargetGoal<>(host, MobEntity.class, 10, false, true,
-                    (entity) -> {
-                        if (entity == host || !entity.isAlive()) return false;
-                        if (entity instanceof PlayerEntity) return true;
-                        return !(entity instanceof IHordes accessor) || !accessor.the_Hordes$isHordeZombie();
-                    }));
-
-            this.targetSelector.add(3, new ActiveTargetGoal<>(host, MobEntity.class, 10, false, true,
-                    (entity) -> {
+                    entity -> {
                         if (entity == host || !entity.isAlive()) return false;
                         if (entity instanceof IHordes accessor && accessor.the_Hordes$isHordeZombie()) {
                             UUID otherPlayerUuid = accessor.the_Hordes$getTargetPlayerUuid();
                             return otherPlayerUuid != null && !otherPlayerUuid.equals(this.targetPlayerUuid);
                         }
-                        return false;
+
+                        return true;
                     }));
         }
 
@@ -122,15 +120,15 @@ public abstract class MobEntityMixin extends LivingEntity implements IHordes {
     @Inject(method = "writeCustomDataToNbt", at = @At("RETURN"))
     private void writeHordeData(NbtCompound nbt, CallbackInfo ci) {
         nbt.putBoolean("IsHordeMob", this.isHordeMob);
-        if (this.hordeId != null) nbt.putUuid("HordeId", this.hordeId);
-        if (this.targetPlayerUuid != null) nbt.putUuid("TargetPlayerUuid", this.targetPlayerUuid);
+        if (this.hordeId != null) nbt.putUuid(hordeIdS, this.hordeId);
+        if (this.targetPlayerUuid != null) nbt.putUuid(TargetPlayerUuidS, this.targetPlayerUuid);
     }
 
     @Inject(method = "readCustomDataFromNbt", at = @At("RETURN"))
     private void readHordeData(NbtCompound nbt, CallbackInfo ci) {
         this.isHordeMob = nbt.getBoolean("IsHordeMob");
-        if (nbt.contains("HordeId")) this.hordeId = nbt.getUuid("HordeId");
-        if (nbt.contains("TargetPlayerUuid")) this.targetPlayerUuid = nbt.getUuid("TargetPlayerUuid");
+        if (nbt.contains(hordeIdS)) this.hordeId = nbt.getUuid(hordeIdS);
+        if (nbt.contains(TargetPlayerUuidS)) this.targetPlayerUuid = nbt.getUuid(TargetPlayerUuidS);
         if (this.isHordeMob) {
             getHordeZombies().add((MobEntity)(Object)this);
             this.applyHordeLogic();
