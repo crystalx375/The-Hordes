@@ -18,7 +18,7 @@ public class Nbt {
     public static void loadState() {
         if (!DATA_FILE.exists()) return;
         try {
-            final NbtCompound nbt = NbtIo.read(DATA_FILE.toPath());
+            final NbtCompound nbt = NbtIo.read(DATA_FILE.toPath().toFile());
             if (nbt != null) {
                 int ticks = nbt.getInt("Ticks");
                 final boolean ACTIVE = nbt.getBoolean("Active");

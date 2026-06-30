@@ -1,7 +1,6 @@
 package crystal.hordes.mixin;
 
 import crystal.hordes.IHordes;
-import crystal.hordes.config.HordesConfig;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.*;
@@ -21,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
 
+import static crystal.hordes.config.HordesConfig.ONLY_TARGET_PLAYERS;
 import static crystal.hordes.config.HordesConfig.getHordeZombies;
 
 @Mixin(MobEntity.class)
@@ -68,7 +68,7 @@ public abstract class MobEntityMixin extends LivingEntity implements IHordes {
                 }
             }
 
-            if (HordesConfig.get().ONLY_TARGET_PLAYERS && !(target instanceof PlayerEntity)) {
+            if (ONLY_TARGET_PLAYERS && !(target instanceof PlayerEntity)) {
                 ci.cancel();
             }
         }
@@ -98,7 +98,7 @@ public abstract class MobEntityMixin extends LivingEntity implements IHordes {
     }
 
     @Unique private void setTargetSelector(MobEntity host) {
-        if (!HordesConfig.get().ONLY_TARGET_PLAYERS) {
+        if (!ONLY_TARGET_PLAYERS) {
             this.targetSelector.add(2, new ActiveTargetGoal<>(host, MobEntity.class, 10, false, true,
                     entity -> {
                         if (entity == host || !entity.isAlive()) return false;

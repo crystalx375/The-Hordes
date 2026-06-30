@@ -11,7 +11,6 @@ import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -56,11 +55,7 @@ public class HordesVariations {
         // Чарим лук для скелета
         if (mob instanceof AbstractSkeletonEntity && rnd.nextFloat() < 0.2f) {
             final ItemStack bow = new ItemStack(Items.BOW);
-            final var registryManager = mob.getWorld().getRegistryManager();
-            final var enchantmentRegistry = registryManager.getWrapperOrThrow(RegistryKeys.ENCHANTMENT);
-            final var powerEnchantment = enchantmentRegistry.getOrThrow(Enchantments.POWER);
-
-            bow.addEnchantment(powerEnchantment, rnd.nextBetween(1, 5));
+            bow.addEnchantment(Enchantments.POWER, rnd.nextBetween(1, 5));
             mob.equipStack(EquipmentSlot.MAINHAND, bow);
         }
 
@@ -83,7 +78,7 @@ public class HordesVariations {
         final double yOffset = (mob instanceof GhastEntity) ? 2.0 : 0.1;
         mob.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + yOffset, pos.getZ() + 0.5, rnd.nextFloat() * 360f, 0f);
         ((IHordes) mob).the_Hordes$setHordeZombie(true, clusterId, playerUuid);
-        mob.initialize(world, world.getLocalDifficulty(pos), SpawnReason.EVENT, null);
+        mob.initialize(world, world.getLocalDifficulty(pos), SpawnReason.EVENT, null, null);
 
         if (mob instanceof PiglinEntity piglin) {
             piglin.setImmuneToZombification(true);
