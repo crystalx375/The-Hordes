@@ -28,7 +28,7 @@ public class ServerMixin {
             nbt.putInt("DelayTimer", delayTimer);
             nbt.putInt("internalDespawnTimer", internalDespawnTimer);
 
-            NbtIo.write(nbt, DATA_FILE.toPath());
+            NbtIo.write(nbt, DATA_FILE.toPath().toFile());
             if (HordesConfig.DEBUG) TheHordes.LOGGER.info("[NBT] Saved state: ticks = {}, active = {}, waveTimer = {}, i = {}, delayTimer = {}, and internalDespawnTimer = {}", HordesConfig.getTicks(), HordesConfig.isActive(), HordesConfig.getWaveTimer(), HordesConfig.getI(), delayTimer, internalDespawnTimer);
         } catch (Exception e) {
             TheHordes.LOGGER.error("Failed to save state");
