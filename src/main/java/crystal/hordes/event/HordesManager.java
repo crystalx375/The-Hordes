@@ -47,6 +47,6 @@ public class HordesManager {
         }
         Despawner.startDespawnTimer();
         TheHordes.LOGGER.info("Hordes ended in {}", world.getRegistryKey().getValue());
-        TheHordes.LOGGER.info("Waiting for delay: {} ticks", DELAY_TICKS);
+        TheHordes.LOGGER.info("Waiting for delay: {} ticks", get().DELAY_TICKS);
     }
 }

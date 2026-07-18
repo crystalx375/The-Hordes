@@ -1,6 +1,7 @@
 package crystal.hordes.util;
 
 import crystal.hordes.TheHordes;
+import crystal.hordes.config.HordesConfig;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
@@ -18,15 +19,20 @@ public class Nbt {
     public static void loadState() {
         if (!DATA_FILE.exists()) return;
         try {
-            final NbtCompound nbt = NbtIo.read(DATA_FILE.toPath().toFile());
+            final NbtCompound nbt = NbtIo.read(DATA_FILE.toPath());
             if (nbt != null) {
-                int ticks = nbt.getInt("Ticks");
+                final int TICKS = nbt.getInt("Ticks");
                 final boolean ACTIVE = nbt.getBoolean("Active");
-                int waveTimer = nbt.getInt("WaveTimer");
-                int i = nbt.getInt("WaveIndex");
+                final int WAVE_TIMER = nbt.getInt("WaveTimer");
+                final int I = nbt.getInt("WaveIndex");
+
+                HordesConfig.setTicks(TICKS);
+                HordesConfig.setActive(ACTIVE);
+                HordesConfig.setWaveTimer(WAVE_TIMER);
+                HordesConfig.setI(I);
                 delayTimer = nbt.getInt("DelayTimer");
                 internalDespawnTimer = nbt.getInt("internalDespawnTimer");
-                if (DEBUG) TheHordes.LOGGER.info("[NBT] Loaded state: ticks = {}, active = {}, waveTimer: {}, i: {}, delayTimer: {} and internalDespawnTimer: {}", ticks, ACTIVE, waveTimer, i, delayTimer, internalDespawnTimer);
+                if (DEBUG) TheHordes.LOGGER.info("[NBT] Loaded state: TICKS = {}, active = {}, waveTimer: {}, i: {}, delayTimer: {} and internalDespawnTimer: {}", TICKS, ACTIVE, WAVE_TIMER, I, delayTimer, internalDespawnTimer);
             }
         } catch (Exception e) {
             TheHordes.LOGGER.error("Failed to load state");
