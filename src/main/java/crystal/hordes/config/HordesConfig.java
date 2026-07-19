@@ -13,14 +13,12 @@ public class HordesConfig {
     private static final int VERSION = 1;
     private static HordesConfig instance;
 
-    // Стейт-переменные (они изменяются в процессе игры, final быть не могут, но убираем из конструктора)
     private static int i = 0;
     private static boolean active = false;
     private static int ticks = 0;
     private static int waveTimer = 0;
     private static final Set<MobEntity> hordeZombies = new HashSet<>();
 
-    // Неизменяемые настройки конфигурации (теперь все public final)
     public static final int DAYS_BETWEEN_HORDES;
     public static final int HORDE_DURATION;
     public static final int WAVE_INTERVAL;
@@ -49,7 +47,6 @@ public class HordesConfig {
     public static final boolean ENABLE_SKELETON_MIXIN;
     public static final float ADJUST_ACCURACY_CHANCE;
 
-    // Константы
     public static final int REQUIRED_LIGHT_LEVEL = 5;
     public static final int UPDATE_TIME = 50;
 
