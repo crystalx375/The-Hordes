@@ -24,12 +24,13 @@ public class HordesVariations {
      * Подготовка мобов
      * используется в SpawnWave
      */
-    public static MobEntity spawnHordes(ServerWorld world, ServerPlayerEntity player, EntityType<?> type, BlockPos finalPos) {
+    public static MobEntity spawnMob(ServerWorld world, ServerPlayerEntity player, EntityType<?> type, BlockPos finalPos) {
         final MobEntity mob = (MobEntity) type.create(world);
         if (mob == null) return null;
+        final Random rnd = world.random;
         final UUID playerUuid = player.getUuid();
         final UUID clusterId = UUID.randomUUID();
-        final Random rnd = world.random;
+
         prepareMob(mob, clusterId, playerUuid, finalPos, world, rnd);
         if ((type == EntityType.SKELETON && rnd.nextFloat() < 0.2f) || (type == EntityType.ZOMBIE && rnd.nextFloat() < 0.01f)) {
             ZombieHorseEntity horse = EntityType.ZOMBIE_HORSE.create(world);
@@ -56,8 +57,7 @@ public class HordesVariations {
         // Чарим лук для скелета
         if (mob instanceof AbstractSkeletonEntity && rnd.nextFloat() < 0.2f) {
             final ItemStack bow = new ItemStack(Items.BOW);
-
-            bow.addEnchantment(Enchantments.POWER, rnd.nextBetween(1, 5));
+            bow.addEnchantment(mob.getWorld().getRegistryManager().getWrapperOrThrow(RegistryKeys.ENCHANTMENT).getOrThrow(Enchantments.POWER), rnd.nextBetween(1, 5));
             mob.equipStack(EquipmentSlot.MAINHAND, bow);
         }
 
@@ -80,13 +80,15 @@ public class HordesVariations {
         final double yOffset = (mob instanceof GhastEntity) ? 2.0 : 0.1;
         mob.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + yOffset, pos.getZ() + 0.5, rnd.nextFloat() * 360f, 0f);
         ((IHordes) mob).the_Hordes$setHordeZombie(true, clusterId, playerUuid);
-        mob.initialize(world, world.getLocalDifficulty(pos), SpawnReason.EVENT, null, null);
+        mob.initialize(world, world.getLocalDifficulty(pos), SpawnReason.EVENT, null);
 
         if (mob instanceof PiglinEntity piglin) {
             piglin.setImmuneToZombification(true);
         }
 
-        if (!(mob instanceof GhastEntity)) {
+        if (!(mob instanceof GhastEntity || mob instanceof PhantomEntity
+                || mob instanceof EndermanEntity || mob instanceof HoglinEntity))
+        {
             mob.setPathfindingPenalty(PathNodeType.WATER, -1.0F);
             mob.setPathfindingPenalty(PathNodeType.WATER_BORDER, -1.0F);
             giveHordeEquipment(mob, rnd);

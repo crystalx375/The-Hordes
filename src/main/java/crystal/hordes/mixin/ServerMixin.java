@@ -11,8 +11,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static crystal.hordes.event.Despawner.delayTimer;
-import static crystal.hordes.event.Despawner.internalDespawnTimer;
 import static crystal.hordes.util.Nbt.DATA_FILE;
 
 @Mixin(ServerWorld.class)
@@ -25,11 +23,10 @@ public class ServerMixin {
             nbt.putBoolean("Active", HordesConfig.isActive());
             nbt.putInt("WaveTimer", HordesConfig.getWaveTimer());
             nbt.putInt("WaveIndex", HordesConfig.getI());
-            nbt.putInt("DelayTimer", delayTimer);
-            nbt.putInt("internalDespawnTimer", internalDespawnTimer);
 
-            NbtIo.write(nbt, DATA_FILE.toPath().toFile());
-            if (HordesConfig.DEBUG) TheHordes.LOGGER.info("[NBT] Saved state: ticks = {}, active = {}, waveTimer = {}, i = {}, delayTimer = {}, and internalDespawnTimer = {}", HordesConfig.getTicks(), HordesConfig.isActive(), HordesConfig.getWaveTimer(), HordesConfig.getI(), delayTimer, internalDespawnTimer);
+            NbtIo.write(nbt, DATA_FILE.toPath());
+
+            if (HordesConfig.DEBUG) TheHordes.LOGGER.info("[NBT] Saved state: ticks = {}, active = {}, waveTimer = {}, i = {}", HordesConfig.getTicks(), HordesConfig.isActive(), HordesConfig.getWaveTimer(), HordesConfig.getI());
         } catch (Exception e) {
             TheHordes.LOGGER.error("Failed to save state");
         }

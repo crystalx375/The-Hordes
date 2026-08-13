@@ -17,6 +17,7 @@ public class HordesConfig {
     private static boolean active = false;
     private static int ticks = 0;
     private static int waveTimer = 0;
+    private static boolean isDespawning = false;
     private static final Set<MobEntity> hordeZombies = new HashSet<>();
 
     public static final int DAYS_BETWEEN_HORDES;
@@ -34,9 +35,9 @@ public class HordesConfig {
     public static final float MIN_CLUSTER;
     public static final boolean REQUIRED_NIGHT;
 
-    public static final Map<String, Integer> overworld;
-    public static final Map<String, Integer> nether;
-    public static final Map<String, Integer> end;
+    public static final Map<String, Integer> OVERWORLD;
+    public static final Map<String, Integer> NETHER;
+    public static final Map<String, Integer> END;
 
     public static final boolean SPAWN_IN_OVERWORLD;
     public static final boolean SPAWN_IN_NETHER;
@@ -78,9 +79,9 @@ public class HordesConfig {
         ENABLE_SKELETON_MIXIN = config.getOrDefault("enable_skeleton_adjust", true);
         ADJUST_ACCURACY_CHANCE = ((Double) config.getOrDefault("adjust_accuracy_chance", 0.05)).floatValue();
 
-        overworld = helper.parseMobMap(config.getOrDefault("mobs.overworld", "minecraft:zombie:5, minecraft:skeleton:1"));
-        nether = helper.parseMobMap(config.getOrDefault("mobs.nether", "minecraft:zombified_piglin:30, minecraft:hoglin:5, minecraft:ghast:1"));
-        end = helper.parseMobMap(config.getOrDefault("mobs.end", "minecraft:phantom:10"));
+        OVERWORLD = helper.parseMobMap(config.getOrDefault("mobs.overworld", "minecraft:zombie:5, minecraft:skeleton:1"));
+        NETHER = helper.parseMobMap(config.getOrDefault("mobs.nether", "minecraft:zombified_piglin:30, minecraft:hoglin:5, minecraft:ghast:1"));
+        END = helper.parseMobMap(config.getOrDefault("mobs.end", "minecraft:phantom:10"));
 
         DESPAWN_INTERVAL_TICKS = config.getOrDefault("despawn_interval", 50);
         PER_DESPAWN = config.getOrDefault("mobs_per_despawn", 1);
@@ -205,6 +206,8 @@ public class HordesConfig {
     public static void setTicks(int value) { ticks = value; }
     public static int getWaveTimer() { return waveTimer; }
     public static void setWaveTimer(int value) { waveTimer = value; }
+    public static boolean getIsDespawning() { return isDespawning; }
+    public static void setIsDespawning(boolean value) { isDespawning = value; }
 
     public static HordesConfig get() {
         if (instance == null) {

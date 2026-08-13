@@ -8,8 +8,6 @@ import net.minecraft.nbt.NbtIo;
 import java.io.File;
 
 import static crystal.hordes.config.HordesConfig.*;
-import static crystal.hordes.event.Despawner.delayTimer;
-import static crystal.hordes.event.Despawner.internalDespawnTimer;
 
 public class Nbt {
     public static final File DATA_FILE = FabricLoader.getInstance().getConfigDir().resolve("hordes_data.dat").toFile();
@@ -19,7 +17,7 @@ public class Nbt {
     public static void loadState() {
         if (!DATA_FILE.exists()) return;
         try {
-            final NbtCompound nbt = NbtIo.read(DATA_FILE.toPath().toFile());
+            final NbtCompound nbt = NbtIo.read(DATA_FILE.toPath());
             if (nbt != null) {
                 final int TICKS = nbt.getInt("Ticks");
                 final boolean ACTIVE = nbt.getBoolean("Active");
@@ -30,9 +28,8 @@ public class Nbt {
                 HordesConfig.setActive(ACTIVE);
                 HordesConfig.setWaveTimer(WAVE_TIMER);
                 HordesConfig.setI(I);
-                delayTimer = nbt.getInt("DelayTimer");
-                internalDespawnTimer = nbt.getInt("internalDespawnTimer");
-                if (DEBUG) TheHordes.LOGGER.info("[NBT] Loaded state: TICKS = {}, active = {}, waveTimer: {}, i: {}, delayTimer: {} and internalDespawnTimer: {}", TICKS, ACTIVE, WAVE_TIMER, I, delayTimer, internalDespawnTimer);
+
+                if (DEBUG) TheHordes.LOGGER.info("[NBT] Loaded state: TICKS = {}, active = {}, waveTimer: {}, i: {}", TICKS, ACTIVE, WAVE_TIMER, I);
             }
         } catch (Exception e) {
             TheHordes.LOGGER.error("Failed to load state");

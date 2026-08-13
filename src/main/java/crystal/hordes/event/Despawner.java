@@ -16,76 +16,68 @@ import static crystal.hordes.config.HordesConfig.*;
 
 
 public class Despawner {
-    public static int delayTimer;
-    public static int internalDespawnTimer;
-
     private static final Set<MobEntity> zombies = HordesConfig.getHordeZombies();
-
+    private static boolean forceDespawn = false;
     /**
      * Я заебался делать комменты для никого
      * Здесь просто деспавн, который вызывается в TickHandler + HordesManager
      */
-    public static void startDespawnTimer() {
-        delayTimer = -1;
-        internalDespawnTimer = -1;
+    public static void startDespawnTimer() { HordesConfig.setIsDespawning(true); }
+    public static void checkIfEmpty() {
+        if (zombies.isEmpty()) HordesConfig.setIsDespawning(false);
     }
 
-    public static void despawnTimer() {
-        if (delayTimer <= -2) return;
-        if (delayTimer == -1) delayTimer = DELAY_TICKS;
-
-        if (delayTimer > 0) {
-            delayTimer -= UPDATE_TIME;
-            if (delayTimer % 1000 == 0 && DEBUG) TheHordes.LOGGER.info("[Despawner] delayTimer: {}", delayTimer);
-            return;
+    public static void despawnTimer(final int ticks) {
+        if (HordesConfig.getIsDespawning() && ticks >= DELAY_TICKS || forceDespawn) {
+            TheHordes.LOGGER.info("Despawning: {}", zombies.size());
+            checkIfEmpty();
+            despawn();
         }
-
-        if (internalDespawnTimer == -1) { internalDespawnTimer = DESPAWN_INTERVAL_TICKS; }
-        internalDespawnTimer -= UPDATE_TIME;
-
-        if (internalDespawnTimer > 0) return;
-        internalDespawnTimer = DESPAWN_INTERVAL_TICKS;
-        despawn();
-        TheHordes.LOGGER.info("Despawning: {}", zombies.size());
-    }
-
-    public static void checkForDespawn() {
-        if (zombies.isEmpty()) delayTimer = -2;
     }
 
     private static void despawn() {
-        Iterator<MobEntity> iter = zombies.iterator();
+        final Iterator<MobEntity> i = zombies.iterator();
         int count = 0;
-        int limit = (int) (PER_DESPAWN + zombies.size() * FACTOR_SIZE);
 
-        while (iter.hasNext() && count < limit) {
-            MobEntity z = iter.next();
-            if (z == null || !z.isAlive() || z.isRemoved()) {
-                iter.remove();
+        while (i.hasNext() && count < (int) (PER_DESPAWN + zombies.size() * FACTOR_SIZE)) {
+           final MobEntity mobEntity = i.next();
+
+            if (mobEntity == null
+                    || !mobEntity.isAlive()
+                    || mobEntity.isRemoved())
+            {
+                i.remove();
                 continue;
             }
 
-            boolean playerNearby = z.getWorld().getPlayers().stream().anyMatch(player -> player.squaredDistanceTo(z) < 80 * 80);
+            if (mobEntity.getWorld() instanceof ServerWorld world)
+            {
+                mobEntity.getWorld().playSound(
+                        null,
+                        BlockPos.ofFloored(mobEntity.getPos()),
+                        SoundEvents.ENTITY_ZOMBIE_VILLAGER_CURE,
+                        SoundCategory.AMBIENT,
+                        0.3f, 1f
+                );
+                world.spawnParticles(
+                        ParticleTypes.SMOKE,
+                        mobEntity.getX(), mobEntity.getY() + 1, mobEntity.getZ(),
+                        10,
+                        0.2, 0.5, 0.2,
+                        0.05
+                );
 
-            if (!playerNearby) {
-                z.discard();
-                iter.remove();
-                if (DEBUG) TheHordes.LOGGER.info("[Despawner] Player not nearby, deleting hordes, now: {}", zombies.size());
-                continue;
-            }
+                mobEntity.discard();
+                i.remove();
 
-            if (z.getWorld() instanceof ServerWorld server) {
-                z.getWorld().playSound(null, BlockPos.ofFloored(z.getPos()), SoundEvents.ENTITY_ZOMBIE_VILLAGER_CURE, SoundCategory.AMBIENT, 0.3f, 1f);
-                server.spawnParticles(ParticleTypes.SMOKE, z.getX(), z.getY() + 1, z.getZ(), 10, 0.2, 0.5, 0.2, 0.05);
-                z.discard();
-                iter.remove();
                 count++;
             }
         }
     }
 
     public static void command() {
-        delayTimer = 0;
+        startDespawnTimer();
+        forceDespawn = true;
         TheHordes.LOGGER.info("Force Despawning...");
     }
 }

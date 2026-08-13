@@ -21,11 +21,11 @@ public class SpawnPos {
      * Поиск места по радиусу
      * Также поиск для незера разделен так как там нельзя topY сделать (крышу ада всегда будет возвращать)
      */
-    public static BlockPos findSpawnAroundPlayer(ServerWorld world, ServerPlayerEntity player, EntityType<?> type, Random rnd) {
-        boolean isNether = world.getRegistryKey() == World.NETHER;
+    public static BlockPos findSpawnAroundPlayer(ServerWorld world, ServerPlayerEntity player, EntityType<?> checkType, Random rnd) {
+        final boolean isNether = world.getRegistryKey() == World.NETHER;
         final int minR = isNether ? MIN_RADIUS / 2 : MIN_RADIUS;
         final int maxR = isNether ? MAX_RADIUS / 2 : MAX_RADIUS;
-        EntityType<?> checkType = type != null ? type : EntityType.ZOMBIE;
+        final EntityType<?> type = checkType != null ? checkType : EntityType.ZOMBIE;
 
         for (int tries = 0; tries < 75; tries++) {
             final double angle = rnd.nextDouble() * 2.0 * Math.PI;
@@ -33,18 +33,22 @@ public class SpawnPos {
             final int x = (int) (r * Math.cos(angle));
             final int z = (int) (r * Math.sin(angle));
 
-            BlockPos targetPos = player.getBlockPos().add(x, 0, z);
+           final BlockPos targetPos = player.getBlockPos().add(x, 0, z);
             BlockPos finalPos;
 
-            if (isNether) {
+            if (isNether)
+            {
                 final int y = Math.min((int)player.getY() + 20, 130);
                 finalPos = findSurfaceInNether(world, player, targetPos.getX(), y, targetPos.getZ());
             } else {
-                int surface = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, targetPos.getX(), targetPos.getZ());
+                final int surface = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, targetPos.getX(), targetPos.getZ());
                 finalPos = new BlockPos(targetPos.getX(), surface, targetPos.getZ());
             }
 
-            if (finalPos != null && isValidSpawn(world, checkType, finalPos) && areaCheck(world, finalPos)) {
+            if (finalPos != null
+                    && isValidSpawn(world, type, finalPos)
+                    && areaCheck(world, finalPos))
+            {
                 TheHordes.LOGGER.info("Spawn: {} For player: {}", finalPos, player.getName().getString());
                 return finalPos;
             }
@@ -75,10 +79,8 @@ public class SpawnPos {
 
         final double r = Math.sqrt(rnd.nextBetween((int) -HordesConfig.MIN_CLUSTER, (int) HordesConfig.MAX_CLUSTER));
         final double angle = rnd.nextDouble() * 2.0 * Math.PI;
-        final int x = (int) (r * Math.cos(angle));
-        final int z = (int) (r * Math.sin(angle));
-        final int tx = basePos.getX() + x;
-        final int tz = basePos.getZ() + z;
+        final int tx = basePos.getX() + (int) (r * Math.cos(angle));
+        final int tz = basePos.getZ() + (int) (r * Math.sin(angle));
         final BlockPos finalPos;
 
         if (isNether) {

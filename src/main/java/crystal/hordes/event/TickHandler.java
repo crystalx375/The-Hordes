@@ -8,7 +8,6 @@ import net.minecraft.world.World;
 
 import java.util.Map;
 
-import static crystal.hordes.event.Despawner.checkForDespawn;
 import static crystal.hordes.event.Despawner.despawnTimer;
 import static crystal.hordes.event.HordesManager.endHorde;
 import static crystal.hordes.event.HordesManager.startHorde;
@@ -20,13 +19,13 @@ public class TickHandler {
     private static boolean wave = false;
 
     private static void worldTick(ServerWorld world, Map<String, Integer> mobPool) {
-        boolean active = HordesConfig.isActive();
-        int ticks = HordesConfig.getTicks();
-
         if (world.getPlayers().isEmpty()) return;
 
+        final boolean active = HordesConfig.isActive();
+        final int ticks = HordesConfig.getTicks();
+
         if (!active && ticks >= HordesConfig.DAYS_BETWEEN_HORDES * 24000) {
-            boolean nightCheck = (world.isNight() || !HordesConfig.REQUIRED_NIGHT);
+            final boolean nightCheck = (world.isNight() || !HordesConfig.REQUIRED_NIGHT);
             if (nightCheck) startHorde(world);
         } else if (active) {
             if (ticks > HordesConfig.HORDE_DURATION - HordesConfig.WAVE_INTERVAL + HordesConfig.UPDATE_TIME * 2) {
@@ -43,13 +42,11 @@ public class TickHandler {
     public static void onServerTick(MinecraftServer server) {
         if (server.getTicks() % HordesConfig.UPDATE_TIME != 0) return;
 
-        // Сначала обрабатываем загрузку NBT на самом первом тике
         if (firstTick) {
             loadState();
             firstTick = false;
         }
 
-        // Берем актуальные изменяемые данные
         final int currentTicks = HordesConfig.getTicks() + HordesConfig.UPDATE_TIME;
         HordesConfig.setTicks(currentTicks);
 
@@ -57,40 +54,42 @@ public class TickHandler {
         final int i = HordesConfig.getI();
         int waveTimer = HordesConfig.getWaveTimer();
 
-        if (HordesConfig.DEBUG) {
-            TheHordes.LOGGER.info("[TickHandler] ticks: {}, active: {}, waveTimer: {}, i: {}",
-                    currentTicks, active, waveTimer, i);
+        if (HordesConfig.DEBUG)
+        {
+            TheHordes.LOGGER.info("[TickHandler] ticks: {}, active: {}, waveTimer: {}, i: {}", currentTicks, active, waveTimer, i);
         }
 
-        if (active) {
+        if (active)
+        {
             waveTimer += HordesConfig.UPDATE_TIME;
             HordesConfig.setWaveTimer(waveTimer);
-        }
-
-        if (server.getTicks() % 1200 != 0 && active && (waveTimer >= HordesConfig.WAVE_INTERVAL || i < 1)) {
-            wave = true;
-            HordesConfig.setI(i + 1);
+            if (waveTimer >= HordesConfig.WAVE_INTERVAL || i < 1)
+            {
+                wave = true;
+                HordesConfig.setI(i + 1);
+            }
         }
 
 
         for (ServerWorld world : server.getWorlds()) {
             final Map<String, Integer> mobPool;
-            if (world.getRegistryKey() == World.NETHER) mobPool = HordesConfig.nether;
-            else if (world.getRegistryKey() == World.END) mobPool = HordesConfig.end;
-            else mobPool = HordesConfig.overworld;
+
+            if (world.getRegistryKey() == World.NETHER) mobPool = HordesConfig.NETHER;
+            else if (world.getRegistryKey() == World.END) mobPool = HordesConfig.END;
+            else mobPool = HordesConfig.OVERWORLD;
 
             worldTick(world, mobPool);
         }
 
-        if (wave) {
+        if (wave)
+        {
             HordesConfig.setWaveTimer(0);
             wave = false;
         }
 
         if (server.getCurrentPlayerCount() == 0) return;
 
-        despawnTimer();
-        checkForDespawn();
+        despawnTimer(currentTicks);
     }
 
     private static void checkSpawn(ServerWorld world, Map<String, Integer> mobPool) {
