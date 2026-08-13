@@ -16,30 +16,40 @@ import static crystal.hordes.config.HordesConfig.*;
 
 
 public class Despawner {
-    private static final Set<MobEntity> zombies = HordesConfig.getHordeZombies();
+    private static final Set<MobEntity> SET_MOB_ENTITIES = HordesConfig.getSetMobEntities();
     private static boolean forceDespawn = false;
     /**
      * Я заебался делать комменты для никого
      * Здесь просто деспавн, который вызывается в TickHandler + HordesManager
      */
-    public static void startDespawnTimer() { HordesConfig.setIsDespawning(true); }
     public static void checkIfEmpty() {
-        if (zombies.isEmpty()) HordesConfig.setIsDespawning(false);
+        if (SET_MOB_ENTITIES.isEmpty())
+        {
+            forceDespawn = false;
+            HordesConfig.setIsDespawning(false);
+        } else {
+            HordesConfig.setIsDespawning(true);
+        }
+
+    }
+
+    public static void startDespawnTimer() {
+        HordesConfig.setIsDespawning(true);
     }
 
     public static void despawnTimer(final int ticks) {
         if (HordesConfig.getIsDespawning() && ticks >= DELAY_TICKS || forceDespawn) {
-            TheHordes.LOGGER.info("Despawning: {}", zombies.size());
+            TheHordes.LOGGER.info("Despawning: {}", SET_MOB_ENTITIES.size());
             checkIfEmpty();
             despawn();
         }
     }
 
     private static void despawn() {
-        final Iterator<MobEntity> i = zombies.iterator();
+        final Iterator<MobEntity> i = SET_MOB_ENTITIES.iterator();
         int count = 0;
 
-        while (i.hasNext() && count < (int) (PER_DESPAWN + zombies.size() * FACTOR_SIZE)) {
+        while (i.hasNext() && count < (int) (PER_DESPAWN + SET_MOB_ENTITIES.size() * FACTOR_SIZE)) {
            final MobEntity mobEntity = i.next();
 
             if (mobEntity == null
@@ -75,9 +85,9 @@ public class Despawner {
         }
     }
 
-    public static void command() {
-        startDespawnTimer();
+    public static void forceDespawn(ServerWorld world) {
         forceDespawn = true;
+        HordesManager.endHorde(world);
         TheHordes.LOGGER.info("Force Despawning...");
     }
 }

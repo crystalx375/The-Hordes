@@ -5,6 +5,7 @@ import crystal.hordes.config.HordesConfig;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.*;
+import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.Angerable;
 import net.minecraft.entity.mob.MobEntity;
@@ -20,9 +21,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
-import java.util.function.Predicate;
 
-import static crystal.hordes.config.HordesConfig.getHordeZombies;
+import static crystal.hordes.config.HordesConfig.getSetMobEntities;
 
 @Mixin(MobEntity.class)
 public abstract class MobEntityMixin extends LivingEntity implements IHordes {
@@ -80,6 +80,9 @@ public abstract class MobEntityMixin extends LivingEntity implements IHordes {
         final MobEntity mob = (MobEntity) (Object) this;
         final var rangeAttr = this.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
 
+        mob.setPathfindingPenalty(PathNodeType.WATER, -1);
+        mob.setPathfindingPenalty(PathNodeType.WATER_BORDER, 16F);
+
         if (rangeAttr != null) {
             rangeAttr.setBaseValue(64.0);
         }
@@ -89,16 +92,16 @@ public abstract class MobEntityMixin extends LivingEntity implements IHordes {
                         || goal.getGoal() instanceof MoveThroughVillageGoal
                         || goal.getGoal() instanceof AvoidSunlightGoal
         );
-        this.targetSelector.getGoals().removeIf(goal ->
-                goal.getGoal() instanceof RevengeGoal ||
-                        goal.getGoal() instanceof ActiveTargetGoal
-        );
-
-        this.targetSelector.add(1, new ActiveTargetGoal<>(mob, PlayerEntity.class, 10, false, true, null));
         setTargetSelector(mob);
     }
 
     @Unique private void setTargetSelector(final MobEntity mob) {
+        this.targetSelector.getGoals().removeIf(goal ->
+                goal.getGoal() instanceof RevengeGoal
+                        || goal.getGoal() instanceof ActiveTargetGoal
+        );
+        this.targetSelector.add(1, new ActiveTargetGoal<>(mob, PlayerEntity.class, 10, false, true, null));
+
         if (!HordesConfig.ONLY_TARGET_PLAYERS) {
             this.targetSelector.add(2, new ActiveTargetGoal<>(mob, MobEntity.class, 10, false, true,
                     entity -> {
@@ -128,7 +131,7 @@ public abstract class MobEntityMixin extends LivingEntity implements IHordes {
         if (nbt.contains(HORDE_ID)) this.clusterId = nbt.getUuid(HORDE_ID);
         if (nbt.contains(TARGET_PLAYER_UUID)) this.targetPlayerUuid = nbt.getUuid(TARGET_PLAYER_UUID);
         if (this.isHordeMob) {
-            getHordeZombies().add((MobEntity)(Object)this);
+            getSetMobEntities().add((MobEntity)(Object)this);
             this.applyHordeLogic();
         }
     }

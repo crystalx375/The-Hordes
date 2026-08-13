@@ -20,21 +20,22 @@ public class HordesCommand {
 
 
             root.then(CommandManager.literal("start").executes(ctx -> {
-                ServerWorld world = ctx.getSource().getServer().getOverworld();
+                final ServerWorld world = ctx.getSource().getServer().getOverworld();
                 HordesManager.startHorde(world);
                 return 1;
             }));
 
 
             root.then(CommandManager.literal("stop").executes(ctx -> {
-                ServerWorld world = ctx.getSource().getServer().getOverworld();
+                final ServerWorld world = ctx.getSource().getServer().getOverworld();
                 HordesManager.endHorde(world);
                 return 1;
             }));
 
 
             root.then(CommandManager.literal("despawn").executes(ctx -> {
-                Despawner.command();
+                final ServerWorld world = ctx.getSource().getServer().getOverworld();
+                Despawner.forceDespawn(world);
                 return 1;
             }));
 

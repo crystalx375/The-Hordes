@@ -6,7 +6,6 @@ import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.HorseEntity;
 import net.minecraft.item.ItemStack;
@@ -25,29 +24,29 @@ public class HordesVariations {
      * используется в SpawnWave
      */
     public static MobEntity spawnMob(ServerWorld world, ServerPlayerEntity player, EntityType<?> type, BlockPos finalPos) {
-        final MobEntity mob = (MobEntity) type.create(world);
-        if (mob == null) return null;
         final Random rnd = world.random;
         final UUID playerUuid = player.getUuid();
         final UUID clusterId = UUID.randomUUID();
+        final MobEntity mobEntity = prepareMob(world, type, clusterId, playerUuid, finalPos, rnd);
+        if (mobEntity == null) return null;
 
-        prepareMob(mob, clusterId, playerUuid, finalPos, world, rnd);
         if ((type == EntityType.SKELETON && rnd.nextFloat() < 0.2f) || (type == EntityType.ZOMBIE && rnd.nextFloat() < 0.01f)) {
-            ZombieHorseEntity horse = EntityType.ZOMBIE_HORSE.create(world);
-            if (horse != null) {
+            final ZombieHorseEntity horse = (ZombieHorseEntity) prepareMob(world, EntityType.ZOMBIE_HORSE, clusterId, playerUuid, finalPos, rnd);
+            if (horse != null)
+            {
                 horse.setTame(true);
-                prepareMob(horse, clusterId, playerUuid, finalPos, world, rnd);
                 world.spawnEntity(horse);
-                mob.startRiding(horse);
+                mobEntity.startRiding(horse);
             }
         }
-        if (mob instanceof ZombieEntity zombie) {
+        if (mobEntity instanceof ZombieEntity zombie) {
             zombie.setBaby(false);
         }
-        world.spawnEntity(mob);
-        HordesConfig.getHordeZombies().add(mob);
 
-        return mob;
+        world.spawnEntity(mobEntity);
+        HordesConfig.getSetMobEntities().add(mobEntity);
+
+        return mobEntity;
     }
 
     private static void giveHordeEquipment(MobEntity mob, Random rnd) {
@@ -76,8 +75,11 @@ public class HordesVariations {
     }
 
 
-    private static void prepareMob(MobEntity mob, UUID clusterId, UUID playerUuid, BlockPos pos, ServerWorld world, Random rnd) {
-        final double yOffset = (mob instanceof GhastEntity) ? 2.0 : 0.1;
+    private static MobEntity prepareMob(ServerWorld world, EntityType<?> type, UUID clusterId, UUID playerUuid, BlockPos pos, Random rnd) {
+        final MobEntity mob = (MobEntity) type.create(world);
+        if (mob == null) return null;
+
+        final double yOffset = (mob instanceof GhastEntity || mob instanceof PhantomEntity) ? 2.0 : 0.1;
         mob.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY() + yOffset, pos.getZ() + 0.5, rnd.nextFloat() * 360f, 0f);
         ((IHordes) mob).the_Hordes$setHordeZombie(true, clusterId, playerUuid);
         mob.initialize(world, world.getLocalDifficulty(pos), SpawnReason.EVENT, null);
@@ -86,12 +88,14 @@ public class HordesVariations {
             piglin.setImmuneToZombification(true);
         }
 
-        if (!(mob instanceof GhastEntity || mob instanceof PhantomEntity
-                || mob instanceof EndermanEntity || mob instanceof HoglinEntity))
+        if (!(mob instanceof GhastEntity
+                || mob instanceof PhantomEntity
+                || mob instanceof EndermanEntity
+                || mob instanceof HoglinEntity))
         {
-            mob.setPathfindingPenalty(PathNodeType.WATER, -1.0F);
-            mob.setPathfindingPenalty(PathNodeType.WATER_BORDER, -1.0F);
             giveHordeEquipment(mob, rnd);
         }
+
+        return mob;
     }
 }

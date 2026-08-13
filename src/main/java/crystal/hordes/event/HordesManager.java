@@ -37,7 +37,7 @@ public class HordesManager {
 
     public static void endHorde(ServerWorld world) {
         if (world == null || !HordesConfig.isActive()) return;
-        getHordeZombies().removeIf(mob -> mob == null || !mob.isAlive());
+        getSetMobEntities().removeIf(mob -> mob == null || !mob.isAlive());
         Despawner.startDespawnTimer();
 
         HordesConfig.setActive(false);

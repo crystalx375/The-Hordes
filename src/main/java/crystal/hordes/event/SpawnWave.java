@@ -28,10 +28,10 @@ public class SpawnWave {
         final int playerCount = world.getServer().getPlayerManager().getPlayerList().size();
         if (playerCount == 0) return;
 
-        HordesConfig.getHordeZombies().removeIf(mob -> mob == null || !mob.isAlive() || mob.isRemoved());
+        HordesConfig.getSetMobEntities().removeIf(mob -> mob == null || !mob.isAlive() || mob.isRemoved());
 
         final Random rnd = world.getRandom();
-        final int CURRENT_HORDE_COUNT = HordesConfig.getHordeZombies().size();
+        final int CURRENT_HORDE_COUNT = HordesConfig.getSetMobEntities().size();
         final int GLOBAL_LIMIT = HordesConfig.HORDES_LIMIT_PER_PLAYER * playerCount;
 
         if (CURRENT_HORDE_COUNT >= GLOBAL_LIMIT)

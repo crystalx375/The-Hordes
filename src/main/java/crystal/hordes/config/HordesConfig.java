@@ -18,7 +18,7 @@ public class HordesConfig {
     private static int ticks = 0;
     private static int waveTimer = 0;
     private static boolean isDespawning = false;
-    private static final Set<MobEntity> hordeZombies = new HashSet<>();
+    private static final Set<MobEntity> MOB_ENTITIES = new HashSet<>();
 
     public static final int DAYS_BETWEEN_HORDES;
     public static final int HORDE_DURATION;
@@ -197,7 +197,7 @@ public class HordesConfig {
         return map.isEmpty() ? Map.of("minecraft:zombie", 100) : map;
     }
 
-    public static Set<MobEntity> getHordeZombies() { return hordeZombies; }
+    public static Set<MobEntity> getSetMobEntities() { return MOB_ENTITIES; }
     public static int getI() { return i; }
     public static void setI(int value) { i = value; }
     public static boolean isActive() { return active; }
